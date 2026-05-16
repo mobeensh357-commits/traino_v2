@@ -40,6 +40,12 @@
           <a href="{% url 'course_detail' course.pk %}" class="btn-outline-g btn-sm">
             <i class="fas fa-eye"></i> Preview
           </a>
+          <a href="{% url 'create_assessment' course.pk %}" class="btn-y btn-sm">
+           <i class="fas fa-tasks"></i> Create Assessment
+          </a>
+          <a href="{% url 'instructor_submissions' %}" class="btn-outline-g btn-sm">
+           <i class="fas fa-file-alt"></i> All Submissions
+          </a>
           {% if course.status == 'draft' %}
           <a href="{% url 'submit_for_approval' course.pk %}" class="btn-y btn-sm"
              onclick="return confirm('Submit this course for admin approval? Make sure all content is ready.')">

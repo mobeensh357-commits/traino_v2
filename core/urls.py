@@ -26,7 +26,9 @@ urlpatterns = [
     path('shop/',         include(('shop.urls',         'shop'),         namespace='shop')),
     path('certificates/', include(('certificates.urls', 'certificates'), namespace='certificates')),
     path('notifications/',  include('notifications.urls')),
-    path('chatbot/',        include('chatbot.urls')),
+    path('chat/', include('chat.urls', namespace='chat')),
+    path('chatbot/', include('chatbot.urls', namespace='chatbot')),
+
 ]
 
 # Serve media files in development

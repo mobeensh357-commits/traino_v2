@@ -13,7 +13,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.utils import timezone
-
+from assessments.models import Assessment, Submission
 from feedback.models import Review   # instead of from .models import Review
 from .models import Course, Section, Material, Enrollment, WishList, CATEGORY_CHOICES, LEVEL_CHOICES
 from instructor.models import InstructorProfile
@@ -77,6 +77,17 @@ def course_detail(request, pk):
     Course detail page – shows curriculum, instructor info, reviews, and enroll button.
     """
     course = get_object_or_404(Course, pk=pk, status='approved')
+    # Assessments for this course
+    assessments = Assessment.objects.filter(course=course).order_by('due_date', '-created_at')
+
+    # Which assessments has the current student already submitted?
+    submitted_assessments = []
+    if request.user.is_authenticated and request.user.is_student:
+        submitted_assessments = Submission.objects.filter(
+            assessment__course=course,
+            student=request.user
+        ).values_list('assessment_id', flat=True)
+
     sections = Section.objects.filter(course=course).prefetch_related('materials')
     reviews = course.reviews.filter(is_visible=True).select_related('student')[:10]
 
@@ -123,6 +134,8 @@ def course_detail(request, pk):
         'review_count': reviews.count(),
         'completed_material_ids': completed_material_ids,
         'progress_percentage': progress_percentage,
+        'assessments': assessments,
+        'submitted_assessments': submitted_assessments,
     })
 
 @login_required
