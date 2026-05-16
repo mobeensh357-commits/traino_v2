@@ -5,6 +5,7 @@ All sensitive values loaded from .env via python-decouple.
 import os
 from pathlib import Path
 from decouple import config, Csv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -82,15 +83,13 @@ TEMPLATES = [
 #   CREATE DATABASE traino_db;
 #   ALTER USER learnzilla_user WITH PASSWORD 'traino2024';
 #   GRANT ALL PRIVILEGES ON DATABASE traino_db TO learnzilla_user;
+
 DATABASES = {
-    'default': {
-        'ENGINE':   'django.db.backends.postgresql',
-        'NAME':     config('DB_NAME',     default='traino_db'),
-        'USER':     config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST':     config('DB_HOST',     default='localhost'),
-        'PORT':     config('DB_PORT',     default='5432'),
-    }
+    'default': dj_database_url.config(
+        default='postgresql://learnzilla_user:traino2024@localhost:5432/traino_db',
+        conn_max_age=600,
+        ssl_require=False
+    )
 }
 
 # ── Custom User Model ─────────────────────────────────────
@@ -116,13 +115,17 @@ MEDIA_URL  = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Django Channels (WebSocket) ───────────────────────────
-CHANNEL_LAYERS = {
+'''CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
-        # For production use Redis:
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {'hosts': [('127.0.0.1', 6379)]},
-    }
+}'''
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [config('REDIS_URL', default='redis://localhost:6379')],
+        },
+    },
 }
 
 # ── Email — Gmail SMTP ────────────────────────────────────
@@ -151,3 +154,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800   # 50 MB
 # Fix: already defined above via decouple — this block intentionally empty
+
