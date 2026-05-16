@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Find Trainers — Traino{% endblock %}
+{% block content %}
+
+<section class="page-banner">
+  <div class="container">
+    <h1>Our Trainers</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">Trainers</li>
+    </ol></nav>
+  </div>
+</section>
+
+<section class="t-section">
+  <div class="container">
+
+    <!-- Search bar -->
+    <form method="GET" action="{% url 'instructor_list' %}" class="mb-4">
+      <div style="position:relative;max-width:480px">
+        <input type="text" name="q" value="{{ query }}" class="t-input"
+               placeholder="Search by name, designation..."
+               style="padding-left:2.6rem">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af"></i>
+        {% if query %}
+        <a href="{% url 'instructor_list' %}"
+           style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.8rem;text-decoration:none">
+          <i class="fas fa-times"></i>
+        </a>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <p style="color:#6b7280;font-size:.85rem;margin:0">
+        Showing <strong style="color:#111">{{ total }}</strong> trainer{{ total|pluralize }}
+        {% if query %} for &ldquo;{{ query }}&rdquo;{% endif %}
+      </p>
+    </div>
+
+    {% if instructors %}
+    <div class="row g-3">
+      {% for inst in instructors %}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <a href="{% url 'instructor_detail' inst.pk %}" style="text-decoration:none">
+          <div class="inst-card" style="position:relative">
+            {% if inst.profile_pic %}
+              <img src="{{ inst.profile_pic.url }}" class="inst-av" alt="{{ inst.get_display_name }}">
+            {% else %}
+              <div class="inst-av-ph">{{ inst.get_display_name|first|upper }}</div>
+            {% endif %}
+
+            <div class="inst-name">{{ inst.get_display_name }}</div>
+            <div class="inst-desg">{{ inst.designation|default:"Trainer" }}</div>
+
+            <div class="inst-stats mb-3">
+              <span style="color:#F59E0B">★</span>
+              {{ inst.rating|floatformat:1 }}
+              &middot; {{ inst.courses.count }} course{{ inst.courses.count|pluralize }}
+              &middot; {{ inst.total_students }} student{{ inst.total_students|pluralize }}
+            </div>
+
+            <span class="btn-y btn-sm w-100 justify-content-center" style="font-size:.78rem;padding:.45rem">
+              View Profile
+            </span>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="t-empty">
+      <i class="fas fa-chalkboard-teacher t-empty-icon"></i>
+      <h5>{% if query %}No trainers found for &ldquo;{{ query }}&rdquo;{% else %}No trainers yet{% endif %}</h5>
+      {% if query %}
+        <a href="{% url 'instructor_list' %}" class="btn-outline-g btn-sm mt-2">Clear search</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

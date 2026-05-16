@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}Student Dashboard — Traino{% endblock %}
+{% block content %}
+<section class="t-section">
+  <div class="container">
+    <div class="dash-wrap">
+
+      <!-- Sidebar -->
+      <div class="dash-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-top">
+            <div class="s-av">
+              {% if profile.profile_pic %}<img src="{{ profile.profile_pic.url }}" alt="av">
+              {% else %}{{ user.username|first|upper }}{% endif %}
+            </div>
+            <div class="s-name">{{ profile.get_display_name }}</div>
+            <div class="s-role">Trainee</div>
+          </div>
+          <ul class="sidebar-nav">
+            <span class="s-section">Learning</span>
+            <li><a href="{% url 'student_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{% url 'my_courses' %}"><i class="fas fa-book"></i> My Courses</a></li>
+            <li><a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i> Wishlist</a></li>
+            <li><a href="{% url 'all_notifications' %}"><i class="fas fa-bell"></i> Notifications
+              {% if unread_count > 0 %}<span class="tbadge tb-err ms-1" style="font-size:.6rem">{{ unread_count }}</span>{% endif %}
+            </a></li>
+            <span class="s-section">Account</span>
+            <li><a href="{% url 'student_profile_edit' %}"><i class="fas fa-user-edit"></i> Edit Profile</a></li>
+            <li><a href="{% url 'change_password' %}"><i class="fas fa-lock"></i> Password</a></li>
+            <div class="sidebar-divider"></div>
+            <li><a href="{% url 'course_list' %}"><i class="fas fa-graduation-cap"></i> Browse Courses</a></li>
+            <li><a href="{% url 'logout' %}" style="color:#DC2626"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-y"><i class="fas fa-book"></i></div>
+              <div><div class="stat-val">{{ stats.enrolled }}</div><div class="stat-lbl">Enrolled</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-b"><i class="fas fa-spinner"></i></div>
+              <div><div class="stat-val">{{ stats.in_progress }}</div><div class="stat-lbl">In Progress</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-g"><i class="fas fa-check-circle"></i></div>
+              <div><div class="stat-val">{{ stats.completed }}</div><div class="stat-lbl">Completed</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-y"><i class="fas fa-certificate"></i></div>
+              <div><div class="stat-val">{{ stats.certificates }}</div><div class="stat-lbl">Certificates</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- In Progress Courses -->
+        <div class="t-card mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h4 style="font-size:.95rem;margin:0"><i class="fas fa-spinner me-2" style="color:#F5C518"></i>In Progress</h4>
+            <a href="{% url 'my_courses' %}" class="btn-outline-g btn-sm">View All</a>
+          </div>
+          {% if in_progress %}
+          <div class="row g-3">
+            {% for enrollment in in_progress %}
+            <div class="col-md-6">
+              <a href="{% url 'course_detail' enrollment.course.pk %}" style="text-decoration:none">
+                <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+                  <div style="font-weight:700;font-size:.88rem;color:#111;margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ enrollment.course.title }}</div>
+                  <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.65rem">{{ enrollment.course.instructor.get_display_name }}</div>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="t-progress" style="flex:1">
+                      <div class="t-progress-bar" style="width:{{ enrollment.progress }}%"></div>
+                    </div>
+                    <span style="font-size:.72rem;font-weight:700;color:#F5C518;white-space:nowrap">{{ enrollment.progress }}%</span>
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="t-empty" style="padding:1.5rem 0">
+            <i class="fas fa-book t-empty-icon"></i>
+            <h5>No courses in progress</h5>
+            <a href="{% url 'course_list' %}" class="btn-y btn-sm mt-2"><i class="fas fa-search"></i> Browse Courses</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Certificates -->
+ <!-- Completed Courses -->
+<div class="t-card mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 style="font-size:.95rem;margin:0"><i class="fas fa-check-circle me-2" style="color:#16A34A"></i>Completed Courses</h4>
+        <a href="{% url 'my_courses' %}?status=completed" class="btn-outline-g btn-sm">View All</a>
+    </div>
+    {% if completed %}
+    <div class="row g-3">
+        {% for enrollment in completed %}
+        <div class="col-md-6">
+            <a href="{% url 'course_detail' enrollment.course.pk %}" style="text-decoration:none">
+                <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;">
+                    <div style="font-weight:700;font-size:.88rem;color:#111;margin-bottom:.3rem">{{ enrollment.course.title }}</div>
+                    <div style="font-size:.75rem;color:#9ca3af;margin-bottom:.65rem">{{ enrollment.course.instructor.get_display_name }}</div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="tbadge tb-ok">Completed on {{ enrollment.completed_at|date:"M d, Y" }}</span>
+                        <!-- ALWAYS show download button -->
+                        <a href="{% url 'certificates:download_certificate' enrollment.course.id %}" class="btn-y btn-sm">
+                            <i class="fas fa-download"></i> Certificate
+                        </a>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="t-empty" style="padding:1.5rem 0">
+        <i class="fas fa-check-circle t-empty-icon"></i>
+        <h5>No completed courses yet</h5>
+        <p>Keep learning and finish your courses!</p>
+    </div>
+    {% endif %}
+</div>
+        <!-- Recent Submissions -->
+        {% if recent_submissions %}
+        <div class="t-card">
+          <h4 style="font-size:.95rem;margin-bottom:1rem"><i class="fas fa-tasks me-2" style="color:#F5C518"></i>Recent Submissions</h4>
+          <div style="overflow-x:auto">
+            <table class="t-table">
+              <thead><tr><th>Assessment</th><th>Course</th><th>Status</th><th>Marks</th><th>Submitted</th></tr></thead>
+              <tbody>
+                {% for sub in recent_submissions %}
+                <tr>
+                  <td style="font-weight:600;font-size:.84rem">{{ sub.assessment.title }}</td>
+                  <td style="font-size:.82rem;color:#6b7280">{{ sub.assessment.course.title|truncatechars:25 }}</td>
+                  <td>
+                    {% if sub.is_graded %}<span class="tbadge tb-ok">Graded</span>
+                    {% else %}<span class="tbadge tb-warn">Pending</span>{% endif %}
+                  </td>
+                  <td style="font-weight:700;font-size:.84rem">
+                    {% if sub.is_graded %}{{ sub.marks }}/{{ sub.assessment.total_marks }}{% else %}—{% endif %}
+                  </td>
+                  <td style="font-size:.75rem;color:#9ca3af">{{ sub.submitted_at|timesince }} ago</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

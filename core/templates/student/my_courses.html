@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}My Courses – Traino{% endblock %}
+{% block content %}
+<section class="page-banner">
+  <div class="container">
+    <h1>My Courses</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">My Courses</li>
+    </ol></nav>
+  </div>
+</section>
+<section class="t-section">
+  <div class="container">
+
+    <!-- Filter tabs -->
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <a href="?status=all" class="tbadge {% if status == 'all' %}tb-dark{% else %}tb-grey{% endif %}" style="padding:.4rem .9rem;font-size:.8rem;cursor:pointer;text-decoration:none">
+        All ({{ total }})
+      </a>
+      <a href="?status=in_progress" class="tbadge {% if status == 'in_progress' %}tb-dark{% else %}tb-grey{% endif %}" style="padding:.4rem .9rem;font-size:.8rem;cursor:pointer;text-decoration:none">
+        In Progress
+      </a>
+      <a href="?status=completed" class="tbadge {% if status == 'completed' %}tb-dark{% else %}tb-grey{% endif %}" style="padding:.4rem .9rem;font-size:.8rem;cursor:pointer;text-decoration:none">
+        Completed
+      </a>
+    </div>
+
+    {% if enrollments %}
+    <div class="row g-3">
+      {% for enrollment in enrollments %}
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="course-card">
+          <a href="{% url 'course_detail' enrollment.course.pk %}" style="text-decoration:none">
+            <div class="cc-img">
+              {% if enrollment.course.thumbnail %}
+                <img src="{{ enrollment.course.thumbnail.url }}" alt="{{ enrollment.course.title }}">
+              {% else %}
+                <div class="cc-img-placeholder"><i class="fas fa-graduation-cap"></i></div>
+              {% endif %}
+              {% if enrollment.is_completed %}
+                <span class="cc-badge free"><i class="fas fa-check"></i> Done</span>
+              {% else %}
+                <span class="cc-badge" style="background:#2563EB;color:#fff">{{ enrollment.progress }}%</span>
+              {% endif %}
+            </div>
+          </a>
+          <div class="cc-body">
+            {% if enrollment.course.category %}<div class="cc-cat">{{ enrollment.course.get_category_display }}</div>{% endif %}
+            <a href="{% url 'course_detail' enrollment.course.pk %}" style="text-decoration:none">
+              <div class="cc-title">{{ enrollment.course.title }}</div>
+            </a>
+            <div class="cc-inst">{{ enrollment.course.instructor.get_display_name }}</div>
+
+            <!-- Progress bar -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <div class="t-progress" style="flex:1">
+                <div class="t-progress-bar {% if enrollment.is_completed %}green{% endif %}" style="width:{{ enrollment.progress }}%"></div>
+              </div>
+              <span style="font-size:.7rem;font-weight:700;color:{% if enrollment.is_completed %}#16A34A{% else %}#F5C518{% endif %}">{{ enrollment.progress }}%</span>
+            </div>
+
+            <div class="d-flex gap-2">
+              <a href="{% url 'course_detail' enrollment.course.pk %}" class="btn-y btn-sm" style="flex:1;justify-content:center">
+                {% if enrollment.is_completed %}Review{% else %}Continue{% endif %}
+              </a>
+              {% if enrollment.is_completed %}
+                <!-- Certificate download button (auto-generates if missing) -->
+                <a href="{% url 'certificates:download_certificate' enrollment.course.id %}" class="btn-outline-g btn-sm" title="Download Certificate">
+                  <i class="fas fa-certificate"></i>
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="t-empty">
+      <i class="fas fa-book t-empty-icon"></i>
+      <h5>No {% if status != 'all' %}
+          {% if status == 'in_progress' %}in progress{% elif status == 'completed' %}completed{% else %}{{ status }}{% endif %}
+      {% endif %}courses found</h5>
+      <a href="{% url 'course_list' %}" class="btn-y mt-2"><i class="fas fa-graduation-cap"></i> Browse Courses</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

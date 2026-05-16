@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% block title %}Grade Submission — Traino{% endblock %}
+
+{% block content %}
+
+<section class="page-banner">
+  <div class="container">
+    <h1>Grade Submission</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'instructor_dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'instructor_submissions' %}">Submissions</a></li>
+      <li class="breadcrumb-item active">Grade</li>
+    </ol></nav>
+  </div>
+</section>
+
+<section class="t-section">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+
+        <!-- Submission Info Card -->
+        <div class="t-card mb-4" style="border-top:3px solid #F5C518">
+          <div class="row g-3 align-items-center">
+            <div class="col-sm-8">
+              <div class="tbadge tb-y mb-2">{{ submission.assessment.get_assess_type_display }}</div>
+              <h4 style="font-size:1.05rem;margin-bottom:.35rem">
+                {{ submission.assessment.title }}
+              </h4>
+              <div style="font-size:.83rem;color:#6b7280">
+                <i class="fas fa-graduation-cap me-1"></i>
+                {{ submission.assessment.course.title }}
+              </div>
+            </div>
+            <div class="col-sm-4 text-sm-end">
+              <div style="font-size:1.5rem;font-weight:800;color:#F5C518">
+                {{ submission.assessment.total_marks }}
+              </div>
+              <div style="font-size:.72rem;color:#9ca3af">Total Marks</div>
+            </div>
+          </div>
+
+          <div class="t-divider my-3"></div>
+
+          <!-- Student info -->
+          <div class="d-flex align-items-center gap-3">
+            <div style="width:42px;height:42px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:800;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              {{ submission.student.username|first|upper }}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:.9rem">{{ submission.student.username }}</div>
+              <div style="font-size:.75rem;color:#9ca3af">{{ submission.student.email }}</div>
+              <div style="font-size:.72rem;color:#6b7280;margin-top:.1rem">
+                <i class="fas fa-clock me-1"></i>
+                Submitted {{ submission.submitted_at|timesince }} ago
+                ({{ submission.submitted_at|date:"d M Y, H:i" }})
+              </div>
+            </div>
+            {% if submission.is_graded %}
+            <span class="tbadge tb-ok ms-auto">
+              <i class="fas fa-check-circle"></i> Already Graded
+            </span>
+            {% else %}
+            <span class="tbadge tb-warn ms-auto">
+              <i class="fas fa-clock"></i> Pending Review
+            </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Submitted File -->
+        {% if submission.file %}
+        <div class="t-card mb-4">
+          <h5 style="font-size:.9rem;font-weight:700;margin-bottom:.9rem">
+            <i class="fas fa-file-alt me-2" style="color:#F5C518"></i>
+            Student's Submitted File
+          </h5>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:.75rem">
+              <div style="width:40px;height:40px;border-radius:8px;background:#FEF3C7;color:#D4A017;font-size:1.1rem;display:flex;align-items:center;justify-content:center">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div>
+                <div style="font-size:.85rem;font-weight:600;color:#111">
+                  {{ submission.file.name|slice:"13:" }}
+                </div>
+                <div style="font-size:.72rem;color:#9ca3af">Click to download and review</div>
+              </div>
+            </div>
+            <a href="{{ submission.file.url }}" target="_blank" class="btn-y btn-sm">
+              <i class="fas fa-download"></i> Download File
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Previous Feedback (if already graded) -->
+        {% if submission.is_graded %}
+        <div class="t-alert info mb-4">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong>Already graded</strong> — Marks: {{ submission.marks }}/{{ submission.assessment.total_marks }}<br>
+            <span style="font-size:.82rem">You can update the marks and feedback below.</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Grading Form -->
+        <div class="t-card">
+          <h5 style="font-size:.9rem;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid #e5e7eb">
+            <i class="fas fa-pen-to-square me-2" style="color:#F5C518"></i>
+            Enter Grade & Feedback
+          </h5>
+
+          <form method="POST" action="{% url 'grade_submission' submission.pk %}">
+            {% csrf_token %}
+
+            <!-- Marks -->
+            <div class="mb-4">
+              <label class="t-label">
+                Marks Obtained
+                <span style="color:#9ca3af;font-weight:400"> (out of {{ submission.assessment.total_marks }})</span>
+              </label>
+              <div style="display:flex;align-items:center;gap:1rem">
+                <div style="position:relative;flex:0 0 160px">
+                  <input type="number"
+                         name="marks"
+                         id="marksInput"
+                         class="t-input"
+                         placeholder="e.g. 85"
+                         min="0"
+                         max="{{ submission.assessment.total_marks }}"
+                         step="0.5"
+                         value="{% if submission.is_graded %}{{ submission.marks }}{% endif %}"
+                         required
+                         oninput="updatePercentage(this.value, {{ submission.assessment.total_marks }})">
+                </div>
+                <div style="font-size:.9rem;color:#6b7280">
+                  / {{ submission.assessment.total_marks }}
+                </div>
+                <div id="percentageBadge"
+                     style="display:none;padding:.3rem .8rem;border-radius:20px;font-size:.82rem;font-weight:700;background:#FEF3C7;color:#D4A017">
+                </div>
+              </div>
+
+              <!-- Visual marks bar -->
+              <div style="margin-top:.75rem">
+                <div class="t-progress">
+                  <div class="t-progress-bar" id="marksBar" style="width:{% if submission.is_graded %}{{ submission.marks|floatformat:0 }}{% else %}0{% endif %}%"></div>
+                </div>
+              </div>
+              <div class="t-hint">Enter marks between 0 and {{ submission.assessment.total_marks }}</div>
+            </div>
+
+            <!-- Feedback -->
+            <div class="mb-4">
+              <label class="t-label">
+                Feedback to Student
+                <span style="color:#9ca3af;font-weight:400"> (optional but recommended)</span>
+              </label>
+              <textarea name="feedback"
+                        class="t-input"
+                        rows="5"
+                        placeholder="Write constructive feedback — what was done well, what can be improved, tips for next time...">{% if submission.is_graded %}{{ submission.feedback }}{% endif %}</textarea>
+              <div class="t-hint">Student will receive a notification with this feedback.</div>
+            </div>
+
+            <!-- Quick feedback templates -->
+            <div class="mb-4">
+              <div style="font-size:.75rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem">
+                Quick Feedback Templates
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn-outline-g btn-sm"
+                        onclick="appendFeedback('Excellent work! You have demonstrated a strong understanding of the topic.')">
+                  Excellent
+                </button>
+                <button type="button" class="btn-outline-g btn-sm"
+                        onclick="appendFeedback('Good effort! A few areas need improvement but overall a solid submission.')">
+                  Good
+                </button>
+                <button type="button" class="btn-outline-g btn-sm"
+                        onclick="appendFeedback('Please review the course materials and resubmit with more detailed answers.')">
+                  Needs Work
+                </button>
+                <button type="button" class="btn-outline-g btn-sm"
+                        onclick="appendFeedback('Late submission noted. Please ensure future submissions are on time.')">
+                  Late Note
+                </button>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:1rem;border-top:1px solid #e5e7eb;flex-wrap:wrap;gap:.75rem">
+              <a href="{% url 'instructor_submissions' %}" class="btn-outline-g">
+                <i class="fas fa-arrow-left"></i> Back to Submissions
+              </a>
+              <button type="submit" class="btn-y" style="padding:.72rem 2rem">
+                <i class="fas fa-check-circle"></i>
+                {% if submission.is_graded %}Update Grade{% else %}Submit Grade{% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update percentage badge and progress bar as instructor types marks
+function updatePercentage(value, total) {
+  var badge = document.getElementById('percentageBadge');
+  var bar   = document.getElementById('marksBar');
+  if (!value || isNaN(value)) {
+    badge.style.display = 'none';
+    bar.style.width = '0%';
+    return;
+  }
+  var pct = Math.min(100, Math.round((parseFloat(value) / total) * 100));
+  badge.textContent = pct + '%';
+  badge.style.display = 'inline-block';
+  bar.style.width = pct + '%';
+
+  // Color code the bar
+  if (pct >= 80) {
+    bar.style.background = '#16A34A';
+    badge.style.background = '#F0FDF4';
+    badge.style.color = '#16A34A';
+  } else if (pct >= 50) {
+    bar.style.background = '#F5C518';
+    badge.style.background = '#FEF3C7';
+    badge.style.color = '#D4A017';
+  } else {
+    bar.style.background = '#DC2626';
+    badge.style.background = '#FEF2F2';
+    badge.style.color = '#DC2626';
+  }
+}
+
+// Append quick feedback to textarea
+function appendFeedback(text) {
+  var ta = document.querySelector('textarea[name="feedback"]');
+  ta.value = ta.value ? ta.value + '\n\n' + text : text;
+  ta.focus();
+}
+
+// Initialize on page load if already graded
+window.addEventListener('load', function () {
+  var input = document.getElementById('marksInput');
+  if (input && input.value) {
+    updatePercentage(input.value, {{ submission.assessment.total_marks }});
+  }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Verify OTP — Traino{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 64px);display:flex;align-items:center;justify-content:center;padding:2rem;background:var(--grey-100)">
+  <div style="background:#fff;border-radius:var(--radius);border:1px solid var(--grey-200);box-shadow:var(--shadow-lg);padding:2.5rem;width:100%;max-width:420px">
+
+    <div style="width:56px;height:56px;border-radius:50%;background:var(--yellow-light);color:var(--yellow-dark);font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+      <i class="fas fa-envelope-open-text"></i>
+    </div>
+
+    <h2 style="font-size:1.35rem;font-weight:800;text-align:center;margin-bottom:.35rem">Check Your Email</h2>
+    <p style="color:var(--grey-500);font-size:.84rem;text-align:center;margin-bottom:1.75rem">
+      We sent a 6-digit OTP to your email. Enter it below to continue.
+    </p>
+
+    <form method="POST" action="{% url 'verify_otp' %}">
+      {% csrf_token %}
+      <div class="fg">
+        <label class="t-label">Enter 6-Digit OTP</label>
+        <input type="text" name="otp" class="t-input otp-input"
+               placeholder="— — — — — —"
+               maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+               required autofocus autocomplete="one-time-code">
+      </div>
+      <button type="submit" class="btn-y btn-block mt-1" style="padding:.78rem">
+        <i class="fas fa-check-circle"></i> Verify OTP
+      </button>
+    </form>
+
+    <p style="text-align:center;margin-top:1.25rem;font-size:.82rem;color:var(--grey-500)">
+      Didn't receive it?
+      <a href="{% url 'forgot_password' %}" style="color:var(--yellow-dark);font-weight:700">Resend OTP</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

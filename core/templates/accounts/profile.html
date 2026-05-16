@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — Traino{% endblock %}
+{% block content %}
+<section class="page-banner">
+  <div class="container">
+    <h1>My Profile</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">Profile</li>
+    </ol></nav>
+  </div>
+</section>
+<section class="t-section">
+  <div class="container">
+    <div class="dash-wrap">
+      <!-- Sidebar -->
+      <div class="dash-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-top">
+            <div class="s-av">
+              {% if user.is_teacher and user.instructor_profile.profile_pic %}
+                <img src="{{ user.instructor_profile.profile_pic.url }}" alt="avatar">
+              {% elif user.is_student and user.student_profile.profile_pic %}
+                <img src="{{ user.student_profile.profile_pic.url }}" alt="avatar">
+              {% else %}
+                {{ user.username|first|upper }}
+              {% endif %}
+            </div>
+            <div class="s-name">{{ user.get_full_name|default:user.username }}</div>
+            <div class="s-role">{% if user.is_teacher %}Trainer{% else %}Trainee{% endif %}</div>
+          </div>
+          <ul class="sidebar-nav">
+            <li><a href="{% url 'profile' %}" class="active"><i class="fas fa-user"></i> My Profile</a></li>
+            {% if user.is_student %}
+              <li><a href="{% url 'student_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+              <li><a href="{% url 'my_courses' %}"><i class="fas fa-book"></i> My Courses</a></li>
+              <li><a href="{% url 'wishlist' %}"><i class="fas fa-heart"></i> Wishlist</a></li>
+            {% endif %}
+            {% if user.is_teacher %}
+              <li><a href="{% url 'instructor_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+              <li><a href="{% url 'course_create' %}"><i class="fas fa-plus-circle"></i> Create Course</a></li>
+            {% endif %}
+            <li><a href="{% url 'change_password' %}"><i class="fas fa-lock"></i> Change Password</a></li>
+            <div class="sidebar-divider"></div>
+            <li><a href="{% url 'logout' %}" style="color:#DC2626"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Main form -->
+      <div>
+        <div class="t-card">
+          <h4 style="font-size:1rem;margin-bottom:1.25rem;padding-bottom:.85rem;border-bottom:1px solid #e5e7eb">
+            <i class="fas fa-user-edit me-2" style="color:#F5C518"></i> Edit Profile
+          </h4>
+          <form method="POST" action="{% url 'profile' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- Avatar upload -->
+            <div class="text-center mb-4">
+              <div style="position:relative;display:inline-block">
+                <div style="width:88px;height:88px;border-radius:50%;overflow:hidden;border:3px solid #e5e7eb;margin:0 auto">
+                  {% if user.is_teacher and user.instructor_profile.profile_pic %}
+                    <img src="{{ user.instructor_profile.profile_pic.url }}" id="previewImg" style="width:100%;height:100%;object-fit:cover">
+                  {% elif user.is_student and user.student_profile.profile_pic %}
+                    <img src="{{ user.student_profile.profile_pic.url }}" id="previewImg" style="width:100%;height:100%;object-fit:cover">
+                  {% else %}
+                    <div id="previewImg" style="width:88px;height:88px;background:#F5C518;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:2rem;color:#0D0D0D">{{ user.username|first|upper }}</div>
+                  {% endif %}
+                </div>
+                <label for="picInput" style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:#F5C518;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.68rem;color:#0D0D0D">
+                  <i class="fas fa-camera"></i>
+                </label>
+                <input type="file" id="picInput" name="profile_pic" accept="image/*" style="display:none"
+                       data-preview="previewImg" onchange="previewFile(this)">
+              </div>
+              <div style="font-size:.72rem;color:#9ca3af;margin-top:.4rem">Click to change photo</div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="t-label">First Name</label>
+                <input type="text" name="first_name" class="t-input" value="{{ user.first_name }}">
+              </div>
+              <div class="col-md-6">
+                <label class="t-label">Last Name</label>
+                <input type="text" name="last_name" class="t-input" value="{{ user.last_name }}">
+              </div>
+              <div class="col-md-6">
+                <label class="t-label">Phone Number</label>
+                <input type="text" name="phone" class="t-input" placeholder="+92 xxx xxxxxxx"
+                       value="{% if user.is_teacher %}{{ user.instructor_profile.phone|default:'' }}{% elif user.is_student %}{{ user.student_profile.phone|default:'' }}{% endif %}">
+              </div>
+              <div class="col-md-6">
+                <label class="t-label">City</label>
+                <input type="text" name="city" class="t-input" placeholder="e.g. Lahore"
+                       value="{% if user.is_teacher %}{{ user.instructor_profile.city|default:'' }}{% elif user.is_student %}{{ user.student_profile.city|default:'' }}{% endif %}">
+              </div>
+              <div class="col-md-6">
+                <label class="t-label">Province</label>
+                <input type="text" name="province" class="t-input" placeholder="e.g. Punjab"
+                       value="{% if user.is_teacher %}{{ user.instructor_profile.province|default:'' }}{% elif user.is_student %}{{ user.student_profile.province|default:'' }}{% endif %}">
+              </div>
+              <div class="col-md-6">
+                <label class="t-label">Education</label>
+                <input type="text" name="education" class="t-input" placeholder="e.g. BS Computer Science"
+                       value="{% if user.is_teacher %}{{ user.instructor_profile.education|default:'' }}{% elif user.is_student %}{{ user.student_profile.education|default:'' }}{% endif %}">
+              </div>
+
+              {% if user.is_teacher %}
+              <div class="col-12">
+                <label class="t-label">Designation</label>
+                <input type="text" name="designation" class="t-input" placeholder="e.g. Certified Fitness Coach" value="{{ user.instructor_profile.designation|default:'' }}">
+              </div>
+              <div class="col-12">
+                <label class="t-label">Experience</label>
+                <textarea name="experience" class="t-input" placeholder="Describe your professional experience...">{{ user.instructor_profile.experience|default:'' }}</textarea>
+              </div>
+              <div class="col-12">
+                <label class="t-label">Bio</label>
+                <textarea name="bio" class="t-input" placeholder="Tell students about yourself...">{{ user.instructor_profile.bio|default:'' }}</textarea>
+              </div>
+              <div class="col-12">
+                <label class="t-label">Verification Document <span style="color:#9ca3af;font-weight:400">(for admin approval)</span></label>
+                <input type="file" name="document" class="t-input" accept="image/*,.pdf">
+                {% if user.instructor_profile.document %}
+                  <div style="font-size:.75rem;color:#16A34A;margin-top:.3rem"><i class="fas fa-check-circle me-1"></i>Document already uploaded</div>
+                {% endif %}
+              </div>
+              {% else %}
+              <div class="col-12">
+                <label class="t-label">Interests</label>
+                <input type="text" name="interests" class="t-input" placeholder="e.g. Fitness, Coding, Design" value="{{ user.student_profile.interests|default:'' }}">
+              </div>
+              <div class="col-12">
+                <label class="t-label">Bio</label>
+                <textarea name="bio" class="t-input" placeholder="Tell us about yourself...">{{ user.student_profile.bio|default:'' }}</textarea>
+              </div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex justify-content-end gap-3 mt-4">
+              <a href="{% url 'home' %}" class="btn-outline-g">Cancel</a>
+              <button type="submit" class="btn-y"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewFile(input) {
+  if (!input.files || !input.files[0]) return;
+  var file = input.files[0];
+  if (!file.type.startsWith("image/")) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var el = document.getElementById("previewImg");
+    if (el.tagName === "IMG") { el.src = e.target.result; }
+    else {
+      var img = document.createElement("img");
+      img.src = e.target.result;
+      img.style.cssText = "width:100%;height:100%;object-fit:cover";
+      img.id = "previewImg";
+      el.parentNode.replaceChild(img, el);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}

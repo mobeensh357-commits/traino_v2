@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}My Wishlist — Traino{% endblock %}
+{% block content %}
+
+<section class="page-banner">
+  <div class="container">
+    <h1>My Wishlist</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">Wishlist</li>
+    </ol></nav>
+  </div>
+</section>
+
+<section class="t-section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h2 style="font-size:1rem;margin:0;color:#374151">
+        {{ total }} course{{ total|pluralize }} saved
+      </h2>
+      <a href="{% url 'course_list' %}" class="btn-y btn-sm">
+        <i class="fas fa-search"></i> Browse More Courses
+      </a>
+    </div>
+
+    {% if wishes %}
+    <div class="row g-3">
+      {% for w in wishes %}
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="course-card">
+          <a href="{% url 'course_detail' w.course.pk %}" style="text-decoration:none">
+            <div class="cc-img">
+              {% if w.course.thumbnail %}
+                <img src="{{ w.course.thumbnail.url }}" alt="{{ w.course.title }}">
+              {% else %}
+                <div class="cc-img-placeholder"><i class="fas fa-graduation-cap"></i></div>
+              {% endif %}
+              {% if w.course.price == 0 %}
+                <span class="cc-badge free">Free</span>
+              {% else %}
+                <span class="cc-badge">Rs {{ w.course.price }}</span>
+              {% endif %}
+            </div>
+          </a>
+          <div class="cc-body">
+            {% if w.course.category %}
+              <div class="cc-cat">{{ w.course.get_category_display }}</div>
+            {% endif %}
+            <a href="{% url 'course_detail' w.course.pk %}" style="text-decoration:none">
+              <div class="cc-title">{{ w.course.title }}</div>
+            </a>
+            <div class="cc-inst">
+              <i class="fas fa-user-tie" style="font-size:.7rem"></i>
+              {{ w.course.instructor.get_display_name }}
+            </div>
+            <div class="cc-footer">
+              <span class="cc-stars">★</span>
+              <span class="cc-rating">{{ w.course.avg_rating|floatformat:1 }}</span>
+              <span class="cc-price {% if w.course.price == 0 %}free{% endif %}">
+                {% if w.course.price == 0 %}Free{% else %}Rs {{ w.course.price }}{% endif %}
+              </span>
+            </div>
+            <!-- Actions -->
+            <div class="d-flex gap-2 mt-2">
+              <a href="{% url 'enroll' w.course.pk %}" class="btn-y btn-sm" style="flex:1;justify-content:center">
+                <i class="fas fa-user-plus"></i> Enroll
+              </a>
+              <a href="{% url 'add_to_wishlist' w.course.pk %}"
+                 class="btn-outline-g btn-sm" title="Remove from wishlist"
+                 onclick="return confirm('Remove from wishlist?')">
+                <i class="fas fa-heart-broken"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="t-empty">
+      <i class="fas fa-heart t-empty-icon"></i>
+      <h5>Your wishlist is empty</h5>
+      <p>Save courses you want to take later by clicking the heart icon.</p>
+      <a href="{% url 'course_list' %}" class="btn-y mt-2">
+        <i class="fas fa-graduation-cap"></i> Browse Courses
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

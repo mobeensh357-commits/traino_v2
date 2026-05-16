@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — Traino{% endblock %}
+{% block content %}
+<section class="page-banner">
+  <div class="container">
+    <h1>Notifications</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">Notifications</li>
+    </ol></nav>
+  </div>
+</section>
+<section class="t-section">
+  <div class="container">
+    <div style="max-width:720px;margin:0 auto">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 style="font-size:1.1rem;margin:0">All Notifications</h2>
+        <a href="{% url 'mark_all_read' %}" class="btn-outline-g btn-sm"><i class="fas fa-check-double"></i> Mark All Read</a>
+      </div>
+      <div class="t-card p-0" style="overflow:hidden">
+        {% for n in notifications %}
+        <div class="notif-row {% if not n.is_read %}unread{% endif %}"
+             onclick="location.href='{% url 'notification_click' n.pk %}'"
+             style="cursor:pointer">
+          <div>
+            <div style="width:8px;height:8px;border-radius:50%;background:{% if not n.is_read %}#F5C518{% else %}#d1d5db{% endif %};margin-top:.35rem"></div>
+          </div>
+          <div style="flex:1">
+            <div class="notif-title">{{ n.title }}</div>
+            <div class="notif-msg">{{ n.message }}</div>
+            <div class="notif-time"><i class="fas fa-clock me-1"></i>{{ n.created_at|timesince }} ago</div>
+          </div>
+          <div>
+            <span class="tbadge {% if n.notif_type == 'success' %}tb-ok{% elif n.notif_type == 'error' %}tb-err{% elif n.notif_type == 'warning' %}tb-warn{% else %}tb-info{% endif %}">
+              {{ n.get_notif_type_display }}
+            </span>
+          </div>
+        </div>
+        {% empty %}
+        <div class="t-empty" style="border:none">
+          <i class="fas fa-bell-slash t-empty-icon"></i>
+          <h5>No notifications yet</h5>
+          <p>You will see updates about your courses, enrollments, and more here.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

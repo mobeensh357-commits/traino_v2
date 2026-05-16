@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% block title %}{{ course.title }} — Traino{% endblock %}
+{% block content %}
+
+<!-- Course Hero -->
+<section class="course-hero">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+
+      <!-- Left Info -->
+      <div class="col-lg-8">
+        {% if course.category %}
+          <span class="tbadge tb-y mb-3">{{ course.get_category_display }}</span>
+        {% endif %}
+        <h1>{{ course.title }}</h1>
+        {% if course.summary %}
+          <p style="color:#aaa;font-size:.92rem;margin-top:.75rem;max-width:600px;line-height:1.75">{{ course.summary }}</p>
+        {% endif %}
+        <div class="meta mt-3">
+          <span><i class="fas fa-star" style="color:#F59E0B"></i> {{ avg_rating|floatformat:1 }} rating</span>
+          <span><i class="fas fa-users"></i> {{ course.total_enrolled }} enrolled</span>
+          {% if course.level %}<span><i class="fas fa-signal"></i> {{ course.get_level_display }}</span>{% endif %}
+          {% if course.language %}<span><i class="fas fa-globe"></i> {{ course.language }}</span>{% endif %}
+          <span><i class="fas fa-calendar"></i> Updated {{ course.updated_at|date:"M Y" }}</span>
+        </div>
+        {% if course.instructor %}
+        <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.1rem">
+          {% if course.instructor.profile_pic %}
+            <img src="{{ course.instructor.profile_pic.url }}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid #F5C518">
+          {% else %}
+            <div style="width:34px;height:34px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center">
+              {{ course.instructor.get_display_name|first|upper }}
+            </div>
+          {% endif %}
+          <a href="{% url 'instructor_detail' course.instructor.pk %}" style="color:#ddd;font-size:.85rem;font-weight:600">
+            {{ course.instructor.get_display_name }}
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Enroll Card (desktop) -->
+      <div class="col-lg-4 d-none d-lg-block">
+        {% include 'courses/_enroll_card.html' %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{# -------------------- PROGRESS BAR (only for enrolled students) -------------------- #}
+{% if is_enrolled %}
+<div class="container mt-3">
+    <div class="progress mb-1" style="height: 10px; border-radius: 5px;">
+        <div class="progress-bar bg-warning" role="progressbar"
+             style="width: {{ progress_percentage }}%;"
+             aria-valuenow="{{ progress_percentage }}"
+             aria-valuemin="0" aria-valuemax="100">
+        </div>
+    </div>
+    <div class="d-flex justify-content-between small text-muted">
+        <span>Course progress</span>
+        <span>{{ progress_percentage }}% complete</span>
+    </div>
+</div>
+{% endif %}
+
+<section class="t-section">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Left column -->
+      <div class="col-lg-8">
+
+        <!-- What You'll Learn -->
+        {% if course.objectives %}
+        <div class="t-card mb-4">
+          <h4 style="font-size:.95rem;margin-bottom:.9rem"><i class="fas fa-list-check me-2" style="color:#F5C518"></i>What You'll Learn</h4>
+          <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0">{{ course.objectives }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Requirements -->
+        {% if course.requirements %}
+        <div class="t-card mb-4">
+          <h4 style="font-size:.95rem;margin-bottom:.9rem"><i class="fas fa-clipboard-list me-2" style="color:#F5C518"></i>Requirements</h4>
+          <p style="color:#6b7280;font-size:.88rem;line-height:1.8;margin:0">{{ course.requirements }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Curriculum -->
+        {% if sections %}
+        <div class="t-card mb-4">
+          <h4 style="font-size:.95rem;margin-bottom:1rem">
+            <i class="fas fa-book-open me-2" style="color:#F5C518"></i>Course Curriculum
+            <span style="font-size:.78rem;font-weight:500;color:#9ca3af;margin-left:.5rem">{{ total_materials }} lecture{{ total_materials|pluralize }}</span>
+          </h4>
+          {% for section in sections %}
+          <div class="curriculum-section">
+            <div class="cs-header" onclick="toggleSection(this)">
+              <span><i class="fas fa-layer-group me-2" style="color:#F5C518"></i>{{ section.title }}</span>
+              <div style="display:flex;align-items:center;gap:.75rem">
+                <span style="font-size:.75rem;color:#9ca3af">{{ section.materials.count }} lecture{{ section.materials.count|pluralize }}</span>
+                <i class="fas fa-chevron-down cs-toggle-icon" style="font-size:.75rem;color:#9ca3af;transition:transform .2s"></i>
+              </div>
+            </div>
+            <div class="cs-body" style="display:none">
+              {% for mat in section.materials.all %}
+              <div class="cs-item {% if mat.is_preview %}preview{% endif %}">
+                <div class="cs-item-icon">
+                  {% if mat.material_type == 'video' %}<i class="fas fa-play-circle"></i>
+                  {% elif mat.material_type == 'pdf' %}<i class="fas fa-file-pdf"></i>
+                  {% else %}<i class="fas fa-file"></i>{% endif %}
+                </div>
+                <span style="flex:1;font-size:.83rem">{{ mat.title }}</span>
+                {% if mat.is_preview %}
+                  <span class="tbadge tb-y" style="font-size:.65rem">Preview</span>
+                {% endif %}
+
+                {# --- NEW: Download + Mark Complete buttons (for enrolled & verified) --- #}
+                {% if is_enrolled and mat.is_verified %}
+                    <div class="btn-group">
+                        <a href="{% url 'download_material' mat.pk %}" class="btn-y btn-sm" style="padding:.25rem .65rem;font-size:.72rem">
+                            <i class="fas fa-download"></i>
+                        </a>
+                        <button class="btn-outline-g btn-sm complete-btn {% if mat.id in completed_material_ids %}completed{% endif %}"
+                                data-material-id="{{ mat.id }}"
+                                style="margin-left: 5px; padding:.25rem .65rem; font-size:.72rem;">
+                            <i class="fas fa-check"></i>
+                            {% if mat.id in completed_material_ids %}Done{% else %}Mark Complete{% endif %}
+                        </button>
+                    </div>
+                {% elif not mat.is_verified %}
+                  <span class="tbadge tb-warn" style="font-size:.65rem">Pending</span>
+                {% endif %}
+                {# --------------------------------------------------------------- #}
+
+              </div>
+              {% empty %}
+              <div style="padding:.75rem 1rem;font-size:.82rem;color:#9ca3af">No materials added yet.</div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Reviews -->
+        <div class="t-card mb-4">
+          <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            <h4 style="font-size:.95rem;margin:0"><i class="fas fa-star me-2" style="color:#F5C518"></i>Student Reviews</h4>
+            <div style="display:flex;align-items:center;gap:.5rem">
+              <span style="font-size:1.4rem;font-weight:800;color:#F5C518">{{ avg_rating|floatformat:1 }}</span>
+              <div>
+                <div style="color:#F59E0B;font-size:.85rem">
+                  {% for i in "12345" %}★{% endfor %}
+                </div>
+                <div style="font-size:.72rem;color:#9ca3af">({{ review_count }} review{{ review_count|pluralize }})</div>
+              </div>
+            </div>
+          </div>
+
+          {% for review in reviews %}
+          <div style="padding:1rem 0;border-bottom:1px solid #f3f4f6">
+            <div style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:800;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                {{ review.student.username|first|upper }}
+              </div>
+              <div style="flex:1">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.25rem">
+                  <span style="font-weight:700;font-size:.85rem">{{ review.student.username }}</span>
+                  <span style="color:#F59E0B;font-size:.82rem">
+                    {% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}
+                  </span>
+                </div>
+                {% if review.title %}<div style="font-weight:600;font-size:.82rem;margin-bottom:.2rem">{{ review.title }}</div>{% endif %}
+                <p style="color:#6b7280;font-size:.82rem;margin:0;line-height:1.65">{{ review.body }}</p>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p style="color:#9ca3af;font-size:.85rem">No reviews yet. Be the first to review after enrolling.</p>
+          {% endfor %}
+
+          <!-- Submit review form (enrolled students only) -->
+          {% if is_enrolled and user.is_student %}
+          <div style="margin-top:1.5rem;padding:1.25rem;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">
+            <h6 style="font-size:.88rem;font-weight:700;margin-bottom:1rem">Leave a Review</h6>
+            <form method="POST" action="{% url 'submit_review' course.pk %}">
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="t-label">Your Rating</label>
+                <div class="star-input" id="starInput">
+                  {% for i in "12345" %}
+                  <label>
+                    <input type="radio" name="rating" value="{{ forloop.counter }}" style="display:none">
+                    ★
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="t-label">Review Title</label>
+                <input type="text" name="title" class="t-input" placeholder="Summarize your experience">
+              </div>
+              <div class="mb-3">
+                <label class="t-label">Your Review</label>
+                <textarea name="body" class="t-input" rows="3" placeholder="Share what you liked, learned, or would improve..."></textarea>
+              </div>
+              <button type="submit" class="btn-y btn-sm"><i class="fas fa-paper-plane"></i> Submit Review</button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Right column -->
+      <div class="col-lg-4">
+
+        <!-- Enroll card (mobile) -->
+        <div class="d-lg-none mb-4">{% include 'courses/_enroll_card.html' %}</div>
+
+        <!-- Instructor card -->
+        {% if course.instructor %}
+        <div class="t-card mb-3">
+          <h5 style="font-size:.88rem;font-weight:700;margin-bottom:.9rem;padding-bottom:.6rem;border-bottom:1px solid #e5e7eb">
+            About the Trainer
+          </h5>
+          <div style="display:flex;gap:.85rem;align-items:center;margin-bottom:.85rem">
+            {% if course.instructor.profile_pic %}
+              <img src="{{ course.instructor.profile_pic.url }}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb">
+            {% else %}
+              <div style="width:52px;height:52px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:800;font-size:1.2rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                {{ course.instructor.get_display_name|first|upper }}
+              </div>
+            {% endif %}
+            <div>
+              <div style="font-weight:700;font-size:.9rem">{{ course.instructor.get_display_name }}</div>
+              <div style="font-size:.75rem;color:#6b7280">{{ course.instructor.designation|default:"Trainer" }}</div>
+              <div style="font-size:.75rem;color:#F59E0B">★ {{ course.instructor.rating|floatformat:1 }}</div>
+            </div>
+          </div>
+          {% if course.instructor.bio %}
+            <p style="font-size:.8rem;color:#6b7280;margin-bottom:.85rem;line-height:1.65">{{ course.instructor.bio|truncatechars:140 }}</p>
+          {% endif %}
+          <a href="{% url 'instructor_detail' course.instructor.pk %}" class="btn-outline-g btn-block justify-content-center" style="padding:.5rem;font-size:.82rem">
+            View Full Profile
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- Chat button (enrolled students) -->
+        {% if is_enrolled and course.instructor %}
+        <div class="t-card">
+          <h5 style="font-size:.88rem;font-weight:700;margin-bottom:.6rem">
+            <i class="fas fa-comments me-2" style="color:#F5C518"></i>Chat with Trainer
+          </h5>
+          <p style="font-size:.8rem;color:#6b7280;margin-bottom:.85rem">Have a question? Message your trainer directly.</p>
+          <a href="{% url 'chat:start_chat' course.pk %}" class="btn-y btn-block justify-content-center" style="padding:.6rem;font-size:.85rem">
+            <i class="fas fa-paper-plane"></i> Open Chat
+          </a>
+        </div>
+        {% endif %}
+
+        <!-- Wishlist button (students not enrolled) -->
+        {% if user.is_authenticated and user.is_student and not is_enrolled %}
+        <div class="t-card mt-3">
+          <a href="{% url 'add_to_wishlist' course.pk %}"
+             class="btn-outline-g btn-block justify-content-center"
+             style="padding:.6rem;font-size:.85rem">
+            {% if is_wishlisted %}
+              <i class="fas fa-heart-broken" style="color:#DC2626"></i> Remove from Wishlist
+            {% else %}
+              <i class="fas fa-heart" style="color:#DC2626"></i> Save to Wishlist
+            {% endif %}
+          </a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Toggle section (already existing)
+function toggleSection(header) {
+  var body = header.nextElementSibling;
+  var icon = header.querySelector('.cs-toggle-icon');
+  var open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (icon) icon.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+// -------------------- Progress tracking (AJAX) --------------------
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+document.querySelectorAll('.complete-btn').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const materialId = this.dataset.materialId;
+        const url = `/courses/material/${materialId}/complete/`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.completed) {
+                this.classList.add('completed');
+                this.innerHTML = '<i class="fas fa-check"></i> Done';
+            } else {
+                this.classList.remove('completed');
+                this.innerHTML = '<i class="fas fa-check"></i> Mark Complete';
+            }
+            // Update progress bar
+            const progressBar = document.querySelector('.progress-bar');
+            if (progressBar) {
+                progressBar.style.width = data.progress + '%';
+                progressBar.setAttribute('aria-valuenow', data.progress);
+            }
+            const progressText = document.querySelector('.progress + .d-flex .small:last-child');
+            if (progressText) progressText.innerText = data.progress + '% complete';
+        })
+        .catch(error => console.error('Error:', error));
+    });
+});
+</script>
+{% endblock %}

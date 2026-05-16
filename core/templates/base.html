@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Traino — Training Aide{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- Traino Main CSS — Yellow #F5C518 | Black #0D0D0D | Grey #6B7280 -->
+  <link rel="stylesheet" href="{% static 'css/traino.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ════════════════════════════════ -->
+<nav class="navbar navbar-expand-lg py-2"
+     style="background:#0D0D0D;border-bottom:2px solid #2a2a2a;position:sticky;top:0;z-index:1050;box-shadow:0 2px 16px rgba(0,0,0,.4)">
+  <div class="container">
+
+    <a href="{% url 'home' %}" class="navbar-brand"
+       style="font-size:1.4rem;font-weight:900;color:#fff;letter-spacing:-.5px;font-family:'Inter',sans-serif">
+      Train<span style="color:#F5C518">o</span>
+    </a>
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navMain"
+            style="border-color:#444;padding:.3rem .5rem">
+      <i class="fas fa-bars" style="color:#ccc;font-size:.9rem"></i>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+      <!-- Search -->
+      <form class="d-none d-lg-flex align-items-center ms-3 me-auto"
+            method="GET" action="{% url 'course_list' %}" style="position:relative">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}"
+               placeholder="Search courses, trainers..."
+               style="background:#1e1e1e;border:1px solid #333;color:#fff;border-radius:5px;padding:.4rem 2.2rem .4rem .8rem;font-size:.82rem;width:250px;outline:none;font-family:'Inter',sans-serif;transition:border-color .2s">
+        <button type="submit" style="position:absolute;right:7px;top:50%;transform:translateY(-50%);background:none;border:none;color:#777;cursor:pointer;font-size:.78rem">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+
+      <!-- Links -->
+      <ul class="navbar-nav align-items-center gap-1 ms-auto">
+        <li><a href="{% url 'home' %}" class="nav-link"
+               style="color:#ccc;font-size:.83rem;font-weight:500;padding:.4rem .75rem;border-radius:5px">
+          <i class="fas fa-home me-1"></i>Home</a></li>
+        <li><a href="{% url 'course_list' %}" class="nav-link"
+               style="color:#ccc;font-size:.83rem;font-weight:500;padding:.4rem .75rem;border-radius:5px">
+          <i class="fas fa-graduation-cap me-1"></i>Courses</a></li>
+        <li><a href="{% url 'instructor_list' %}" class="nav-link"
+               style="color:#ccc;font-size:.83rem;font-weight:500;padding:.4rem .75rem;border-radius:5px">
+          <i class="fas fa-chalkboard-teacher me-1"></i>Trainers</a></li>
+
+        {% if user.is_authenticated %}
+
+          <!-- Bell -->
+          <li class="nav-item dropdown">
+            <button data-bs-toggle="dropdown"
+                    style="background:none;border:none;color:#aaa;font-size:.95rem;padding:.38rem .5rem;border-radius:5px;position:relative;cursor:pointer">
+              <i class="fas fa-bell"></i>
+              {% if unread_count > 0 %}
+                <span style="position:absolute;top:2px;right:1px;background:#F5C518;color:#0D0D0D;font-size:.5rem;font-weight:900;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center">
+                  {{ unread_count }}
+                </span>
+              {% endif %}
+            </button>
+            <div class="dropdown-menu dropdown-menu-end p-0"
+                 style="min-width:300px;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 12px 40px rgba(0,0,0,.16);overflow:hidden">
+              <div style="background:#f9fafb;padding:.7rem 1rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-weight:700;font-size:.82rem">Notifications</span>
+                {% if unread_count > 0 %}
+                  <a href="{% url 'mark_all_read' %}" style="font-size:.72rem;color:#D4A017;font-weight:600">Mark all read</a>
+                {% endif %}
+              </div>
+              {% for n in recent_notifications %}
+              <a href="{% url 'notification_click' n.id %}"
+                 style="display:block;padding:.65rem 1rem;border-bottom:1px solid #f3f4f6;text-decoration:none;{% if not n.is_read %}border-left:3px solid #F5C518;background:#FFFBEA;{% endif %}">
+                <div style="font-weight:600;font-size:.8rem;color:#111">{{ n.title }}</div>
+                <div style="font-size:.73rem;color:#6b7280;margin-top:.1rem">{{ n.message|truncatechars:55 }}</div>
+                <div style="font-size:.67rem;color:#9ca3af;margin-top:.15rem">{{ n.created_at|timesince }} ago</div>
+              </a>
+              {% empty %}
+              <div style="padding:1.5rem;text-align:center;color:#9ca3af;font-size:.8rem">
+                <i class="fas fa-bell-slash d-block mb-2" style="font-size:1.4rem;opacity:.25"></i>No notifications yet
+              </div>
+              {% endfor %}
+              <div style="padding:.55rem 1rem;text-align:center;border-top:1px solid #f3f4f6">
+                <a href="{% url 'all_notifications' %}" style="font-size:.75rem;color:#D4A017;font-weight:600">View all notifications</a>
+              </div>
+            </div>
+          </li>
+
+          <!-- User Avatar -->
+          <li class="nav-item dropdown ms-1">
+            <button data-bs-toggle="dropdown"
+                    style="width:32px;height:32px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:800;font-size:.8rem;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              {% if user.is_teacher %}
+                {% with p=user.instructor_profile %}
+                  {% if p.profile_pic %}<img src="{{ p.profile_pic.url }}" style="width:32px;height:32px;object-fit:cover">{% else %}{{ user.username|first|upper }}{% endif %}
+                {% endwith %}
+              {% elif user.is_student %}
+                {% with p=user.student_profile %}
+                  {% if p.profile_pic %}<img src="{{ p.profile_pic.url }}" style="width:32px;height:32px;object-fit:cover">{% else %}{{ user.username|first|upper }}{% endif %}
+                {% endwith %}
+              {% else %}{{ user.username|first|upper }}{% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end p-1"
+                style="min-width:210px;border-radius:10px;border:1px solid #e5e7eb;box-shadow:0 12px 40px rgba(0,0,0,.14)">
+              <li>
+                <div style="padding:.6rem .85rem .45rem;border-bottom:1px solid #f3f4f6;margin-bottom:.25rem">
+                  <div style="font-weight:700;font-size:.84rem;color:#111">{{ user.get_full_name|default:user.username }}</div>
+                  <div style="font-size:.67rem;color:#D4A017;font-weight:700;text-transform:uppercase;letter-spacing:.4px">
+                    {% if user.is_teacher %}Trainer{% elif user.is_student %}Trainee{% else %}User{% endif %}
+                  </div>
+                </div>
+              </li>
+              {% if user.is_teacher %}
+                <li><a class="dropdown-item" href="{% url 'instructor_dashboard' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-tachometer-alt me-2" style="width:14px;color:#9ca3af"></i>Dashboard</a></li>
+                <li><a class="dropdown-item" href="{% url 'course_create' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-plus-circle me-2" style="width:14px;color:#9ca3af"></i>Create Course</a></li>
+              {% endif %}
+              {% if user.is_student %}
+                <li><a class="dropdown-item" href="{% url 'student_dashboard' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-tachometer-alt me-2" style="width:14px;color:#9ca3af"></i>Dashboard</a></li>
+                <li><a class="dropdown-item" href="{% url 'my_courses' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-book me-2" style="width:14px;color:#9ca3af"></i>My Courses</a></li>
+                <li><a class="dropdown-item" href="{% url 'wishlist' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-heart me-2" style="width:14px;color:#9ca3af"></i>Wishlist</a></li>
+              {% endif %}
+              <li><a class="dropdown-item" href="{% url 'profile' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-user me-2" style="width:14px;color:#9ca3af"></i>Profile</a></li>
+              <li><a class="dropdown-item" href="{% url 'change_password' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#374151"><i class="fas fa-lock me-2" style="width:14px;color:#9ca3af"></i>Password</a></li>
+              <li><hr class="dropdown-divider my-1"></li>
+              <li><a class="dropdown-item" href="{% url 'logout' %}" style="font-size:.82rem;padding:.48rem .85rem;border-radius:5px;color:#DC2626"><i class="fas fa-sign-out-alt me-2" style="width:14px"></i>Sign Out</a></li>
+            </ul>
+          </li>
+
+        {% else %}
+          <li class="ms-1">
+            <a href="{% url 'login' %}"
+               style="display:inline-block;background:rgba(255,255,255,.08);color:#fff;border:1px solid #555;border-radius:5px;padding:.36rem .9rem;font-size:.8rem;font-weight:600;text-decoration:none">
+              Log In
+            </a>
+          </li>
+          <li class="ms-1">
+            <a href="{% url 'register' %}"
+               style="display:inline-block;background:#F5C518;color:#0D0D0D;border-radius:5px;padding:.36rem .9rem;font-size:.8rem;font-weight:700;text-decoration:none">
+              Sign Up Free
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════ MESSAGES ══════════════════════════════ -->
+{% if messages %}
+<div style="position:fixed;top:68px;right:14px;z-index:9999;display:flex;flex-direction:column;gap:7px;max-width:350px;pointer-events:none">
+  {% for msg in messages %}
+  <div class="t-toast {{ msg.tags }}" style="pointer-events:all">
+    <i class="fas {% if msg.tags == 'success' %}fa-check-circle{% elif msg.tags == 'error' %}fa-exclamation-circle{% elif msg.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+    <span style="flex:1;font-size:.84rem">{{ msg }}</span>
+    <button onclick="this.parentElement.remove()" class="t-toast-close"><i class="fas fa-times"></i></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ═══════════ MAIN ══════════════════════════════════ -->
+<main>{% block content %}{% endblock %}</main>
+
+<!-- ═══════════ FOOTER ════════════════════════════════ -->
+<footer class="t-footer">
+  <div class="container">
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="f-brand">Train<span>o</span></div>
+        <p class="f-desc">Pakistan's leading training management platform. Learn health, fitness, technology and more from verified expert trainers — from home.</p>
+      </div>
+      <div class="col-lg-2 col-md-3 col-6">
+        <div class="f-title">Platform</div>
+        <ul class="f-links">
+          <li><a href="{% url 'course_list' %}">Browse Courses</a></li>
+          <li><a href="{% url 'instructor_list' %}">Find Trainers</a></li>
+          <li><a href="{% url 'events' %}">Events</a></li>
+          <li><a href="{% url 'guideline' %}">How It Works</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2 col-md-3 col-6">
+        <div class="f-title">Account</div>
+        <ul class="f-links">
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'profile' %}">My Profile</a></li>
+            {% if user.is_student %}<li><a href="{% url 'my_courses' %}">My Courses</a></li>{% endif %}
+            <li><a href="{% url 'logout' %}">Sign Out</a></li>
+          {% else %}
+            <li><a href="{% url 'login' %}">Sign In</a></li>
+            <li><a href="{% url 'register' %}">Register Free</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="col-lg-2 col-md-3 col-6">
+        <div class="f-title">Support</div>
+        <ul class="f-links">
+          <li><a href="{% url 'contact' %}">Contact Us</a></li>
+          <li><a href="{% url 'support' %}">Help Center</a></li>
+          <li><a href="{% url 'about' %}">About Traino</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-2 col-md-3 col-6">
+        <div class="f-title">Contact</div>
+        <ul class="f-links">
+          <li><i class="fas fa-envelope me-1"></i>traino.trainingaide9@gmail.com</li>
+          <li><i class="fas fa-phone me-1"></i>0325-9745225</li>
+          <li><i class="fas fa-map-marker-alt me-1"></i>Lahore, Pakistan</li>
+        </ul>
+      </div>
+    </div>
+    <div class="f-bottom d-flex justify-content-between flex-wrap gap-2">
+      <span>© 2024 Traino — GC University Lahore · FYP 2022–2026</span>
+      <span style="color:#2a2a2a">Django 4.2 · PostgreSQL 16 · Bootstrap 5</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Back to Top -->
+<button id="btt"><i class="fas fa-arrow-up"></i></button>
+
+<!-- Chatbot FAB -->
+<button class="chatbot-fab" id="chatbotFab" title="Ask Traino Assistant">
+  <i class="fas fa-robot"></i>
+</button>
+<div class="chatbot-window" id="chatbotWindow">
+  <div class="cbot-header">
+    <div class="cbot-av"><i class="fas fa-robot" style="font-size:.85rem"></i></div>
+    <div>
+      <div class="cbot-name">Traino Assistant</div>
+      <div class="cbot-status">Ask me anything</div>
+    </div>
+    <button class="cbot-close" id="chatbotClose"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="cbot-messages" id="chatbotMessages"></div>
+  <div class="cbot-input">
+    <input type="text" id="chatbotInput" placeholder="Type your question...">
+    <button id="chatbotSend"><i class="fas fa-paper-plane"></i></button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

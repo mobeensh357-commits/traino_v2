@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Student Chats{% endblock %}
+{% block content %}
+<section class="t-section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2><i class="fas fa-comments me-2" style="color:#F5C518"></i> Student Conversations</h2>
+      <a href="{% url 'instructor_dashboard' %}" class="btn-outline-g">← Dashboard</a>
+    </div>
+
+    {% if rooms %}
+      <div class="list-group">
+        {% for room in rooms %}
+        <a href="{% url 'chat:chat_room' room.id %}" class="list-group-item list-group-item-action">
+          <div class="d-flex w-100 justify-content-between align-items-center">
+            <h5 class="mb-1">
+              {{ room.student.get_full_name|default:room.student.username }}
+              <small class="text-muted">({{ room.course.title }})</small>
+            </h5>
+            <small>{{ room.created_at|date:"M d, H:i" }}</small>
+          </div>
+          <p class="mb-1">
+            {% if room.last_message %}
+              <i class="fas fa-comment-dots me-1"></i> {{ room.last_message.content|truncatechars:80 }}
+            {% else %}
+              <span class="text-muted">No messages yet</span>
+            {% endif %}
+          </p>
+        </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="t-empty">
+        <i class="fas fa-comments t-empty-icon"></i>
+        <h5>No conversations yet</h5>
+        <p>When students enroll and start chatting, their rooms will appear here.</p>
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

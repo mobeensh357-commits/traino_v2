@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}Instructor Dashboard — Traino{% endblock %}
+{% block content %}
+<section class="t-section">
+  <div class="container">
+    <div class="dash-wrap">
+
+      <!-- Sidebar -->
+      <div class="dash-sidebar">
+        <div class="sidebar-box">
+          <div class="sidebar-top">
+            <div class="s-av">
+              {% if profile.profile_pic %}<img src="{{ profile.profile_pic.url }}" alt="avatar">
+              {% else %}{{ user.username|first|upper }}{% endif %}
+            </div>
+            <div class="s-name">{{ profile.get_display_name }}</div>
+            <div class="s-role">Trainer</div>
+            {% if profile.is_approved %}
+              <span class="tbadge tb-ok mt-2" style="font-size:.65rem"><i class="fas fa-check-circle"></i> Approved</span>
+            {% else %}
+              <span class="tbadge tb-warn mt-2" style="font-size:.65rem"><i class="fas fa-clock"></i> Pending Approval</span>
+            {% endif %}
+          </div>
+          <ul class="sidebar-nav">
+            <span class="s-section">Main</span>
+            <li><a href="{% url 'instructor_dashboard' %}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li><a href="{% url 'course_create' %}"><i class="fas fa-plus-circle"></i> Create Course</a></li>
+            <li><a href="{% url 'instructor_submissions' %}"><i class="fas fa-tasks"></i> Submissions</a></li>
+            <li><a href="{% url 'instructor_chat_list' %}"><i class="fas fa-comments"></i> Student Chats</a></li>
+            <span class="s-section">Account</span>
+            <li><a href="{% url 'instructor_profile_edit' %}"><i class="fas fa-user-edit"></i> Edit Profile</a></li>
+            <li><a href="{% url 'change_password' %}"><i class="fas fa-lock"></i> Password</a></li>
+            <div class="sidebar-divider"></div>
+            <li><a href="{% url 'instructor_detail' profile.pk %}"><i class="fas fa-eye"></i> Public Profile</a></li>
+            <li><a href="{% url 'logout' %}" style="color:#DC2626"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div>
+
+        <!-- Approval Warning -->
+        {% if not profile.is_approved %}
+        <div class="t-alert warning mb-4">
+          <i class="fas fa-exclamation-triangle"></i>
+          <div>
+            <strong>Profile Pending Approval</strong><br>
+            <span style="font-size:.82rem">Your profile is being reviewed by our admin team. You can create draft courses but cannot publish until approved. Upload your verification document in <a href="{% url 'instructor_profile_edit' %}" style="color:inherit;text-decoration:underline">Edit Profile</a>.</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-y"><i class="fas fa-graduation-cap"></i></div>
+              <div><div class="stat-val">{{ stats.total_courses }}</div><div class="stat-lbl">Total Courses</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-g"><i class="fas fa-check-circle"></i></div>
+              <div><div class="stat-val">{{ stats.approved_courses }}</div><div class="stat-lbl">Published</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-b"><i class="fas fa-users"></i></div>
+              <div><div class="stat-val">{{ stats.total_students }}</div><div class="stat-lbl">Total Students</div></div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+              <div class="stat-icon si-r"><i class="fas fa-tasks"></i></div>
+              <div><div class="stat-val">{{ stats.pending_submissions }}</div><div class="stat-lbl">Pending Reviews</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Courses -->
+        <div class="t-card mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <h4 style="font-size:.95rem;margin:0"><i class="fas fa-graduation-cap me-2" style="color:#F5C518"></i>My Courses</h4>
+            <a href="{% url 'course_create' %}" class="btn-y btn-sm"><i class="fas fa-plus"></i> New Course</a>
+          </div>
+
+          {% if recent_courses %}
+          <div style="overflow-x:auto">
+            <table class="t-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Status</th>
+                  <th>Enrolled</th>
+                  <th>Rating</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for c in recent_courses %}
+                <tr>
+                  <td>
+                    <div style="font-weight:600;font-size:.85rem;color:#111;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div>
+                    <div style="font-size:.72rem;color:#9ca3af">{{ c.get_level_display }} · {{ c.get_category_display }}</div>
+                  </td>
+                  <td>
+                    {% if c.status == 'approved' %}<span class="tbadge tb-ok">Published</span>
+                    {% elif c.status == 'pending' %}<span class="tbadge tb-warn">Pending</span>
+                    {% elif c.status == 'draft' %}<span class="tbadge tb-grey">Draft</span>
+                    {% elif c.status == 'rejected' %}<span class="tbadge tb-err">Rejected</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-weight:700;font-size:.85rem">{{ c.total_enrolled }}</td>
+                  <td style="font-size:.85rem">
+                    <span style="color:#F59E0B">★</span> {{ c.avg_rating|floatformat:1 }}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <a href="{% url 'course_manage' c.pk %}" class="btn-outline-g btn-sm" title="Manage"><i class="fas fa-cog"></i></a>
+                      <a href="{% url 'course_detail' c.pk %}" class="btn-outline-g btn-sm" title="View"><i class="fas fa-eye"></i></a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="t-empty" style="padding:2rem 0">
+            <i class="fas fa-graduation-cap t-empty-icon"></i>
+            <h5>No courses yet</h5>
+            <p>Create your first course and start teaching.</p>
+            <a href="{% url 'course_create' %}" class="btn-y btn-sm mt-2"><i class="fas fa-plus"></i> Create Course</a>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Pending Submissions -->
+        {% if pending_submissions %}
+        <div class="t-card">
+          <h4 style="font-size:.95rem;margin-bottom:1rem">
+            <i class="fas fa-tasks me-2" style="color:#F5C518"></i>Pending Submissions
+            <span class="tbadge tb-err ms-2">{{ stats.pending_submissions }}</span>
+          </h4>
+          <div style="overflow-x:auto">
+            <table class="t-table">
+              <thead><tr><th>Student</th><th>Assessment</th><th>Submitted</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for sub in pending_submissions %}
+                <tr>
+                  <td style="font-weight:600;font-size:.84rem">{{ sub.student.username }}</td>
+                  <td style="font-size:.84rem">{{ sub.assessment.title }}</td>
+                  <td style="font-size:.78rem;color:#9ca3af">{{ sub.submitted_at|timesince }} ago</td>
+                  <td><a href="{% url 'grade_submission' sub.pk %}" class="btn-y btn-sm"><i class="fas fa-check"></i> Grade</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <a href="{% url 'instructor_submissions' %}" class="btn-outline-g btn-sm mt-3">View All Submissions</a>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

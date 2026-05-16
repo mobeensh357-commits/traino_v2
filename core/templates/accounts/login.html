@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Sign In — Traino{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-panel-left">
+    <div class="auth-logo">Train<span>o</span></div>
+    <h2 class="auth-headline">Welcome back to Traino</h2>
+    <p class="auth-sub">Sign in to access your courses, chat with trainers, and track your progress.</p>
+    <div class="auth-feat"><div class="auth-feat-dot"></div><span>500+ verified training courses</span></div>
+    <div class="auth-feat"><div class="auth-feat-dot"></div><span>Real-time chat with your trainer</span></div>
+    <div class="auth-feat"><div class="auth-feat-dot"></div><span>Download materials for offline study</span></div>
+    <div class="auth-feat"><div class="auth-feat-dot"></div><span>Track progress & earn certificates</span></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-panel-right">
+    <h1 class="auth-title">Sign In</h1>
+    <p class="auth-tagline">New to Traino? <a href="{% url 'register' %}" style="color:var(--yellow-dark);font-weight:700">Create a free account</a></p>
+
+    <form method="POST" action="{% url 'login' %}">
+      {% csrf_token %}
+
+      <div class="fg">
+        <label class="t-label">Email Address</label>
+        <input type="email" name="email" class="t-input"
+               placeholder="you@example.com"
+               value="{{ request.POST.email|default:'' }}"
+               required autofocus>
+      </div>
+
+      <div class="fg">
+        <label class="t-label">Password</label>
+        <div class="pw-wrap">
+          <input type="password" name="password" id="loginPw" class="t-input"
+                 placeholder="Enter your password" required>
+          <button type="button" class="pw-toggle" onclick="Traino.togglePw('loginPw','loginPwEye')">
+            <i class="fas fa-eye" id="loginPwEye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;font-size:.8rem;color:var(--grey-600)">
+          <input type="checkbox" name="remember"> Remember me
+        </label>
+        <a href="{% url 'forgot_password' %}" style="font-size:.8rem;color:var(--yellow-dark);font-weight:600">
+          Forgot password?
+        </a>
+      </div>
+
+      <button type="submit" class="btn-y btn-block" style="padding:.8rem">
+        <i class="fas fa-sign-in-alt"></i> Sign In to Traino
+      </button>
+    </form>
+
+    <div style="position:relative;margin:1.5rem 0;text-align:center">
+      <div style="height:1px;background:var(--grey-200)"></div>
+      <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;padding:0 .75rem;font-size:.75rem;color:var(--grey-400)">or continue as</span>
+    </div>
+
+    <div class="d-flex gap-2">
+      <a href="{% url 'register' %}?role=student" class="btn-outline-g btn-block">
+        <i class="fas fa-user-graduate"></i> Join as Trainee
+      </a>
+      <a href="{% url 'register' %}?role=instructor" class="btn-outline-g btn-block">
+        <i class="fas fa-chalkboard-teacher"></i> Join as Trainer
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

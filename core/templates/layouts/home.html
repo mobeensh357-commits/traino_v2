@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Traino — Learn Skills From Expert Trainers{% endblock %}
+
+{% block content %}
+
+<!-- ════════════ HERO ════════════════════════════════════ -->
+<section style="background:#0D0D0D;padding:5rem 0 4rem;border-bottom:3px solid #F5C518;position:relative;overflow:hidden">
+  <div style="position:absolute;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(245,197,24,.05) 0%,transparent 70%);pointer-events:none"></div>
+  <div class="container position-relative">
+    <div class="row align-items-center g-5">
+
+      <!-- Text -->
+      <div class="col-lg-6">
+        <span class="tbadge tb-y mb-3"><i class="fas fa-bolt me-1"></i> Pakistan's #1 Training Platform</span>
+
+        <h1 style="color:#fff;font-size:clamp(2rem,4.5vw,3.1rem);font-weight:900;line-height:1.15;margin-bottom:1.1rem">
+          Learn Skills From<br>
+          <span style="color:#F5C518">Expert Trainers</span><br>
+          At Home
+        </h1>
+
+        <p style="color:#888;font-size:.97rem;margin-bottom:2rem;max-width:460px;line-height:1.8">
+          Connect with verified trainers in health, fitness, technology and personal development.
+          Download materials, chat live, and grow professionally.
+        </p>
+
+        <div class="d-flex gap-3 flex-wrap mb-4">
+          <a href="{% url 'course_list' %}" class="btn-y" style="padding:.75rem 1.75rem;font-size:.95rem">
+            <i class="fas fa-graduation-cap"></i> Browse Courses
+          </a>
+          {% if not user.is_authenticated %}
+          <a href="{% url 'register' %}" class="btn-ghost" style="padding:.72rem 1.6rem;font-size:.95rem">
+            <i class="fas fa-user-plus"></i> Join Free
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Stats row -->
+        <div class="d-flex gap-4">
+          <div>
+            <div style="font-size:1.6rem;font-weight:900;color:#F5C518">{{ stats.total_courses }}+</div>
+            <div style="font-size:.72rem;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Courses</div>
+          </div>
+          <div>
+            <div style="font-size:1.6rem;font-weight:900;color:#F5C518">{{ stats.total_instructors }}+</div>
+            <div style="font-size:.72rem;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Trainers</div>
+          </div>
+          <div>
+            <div style="font-size:1.6rem;font-weight:900;color:#F5C518">{{ stats.total_enrollments }}+</div>
+            <div style="font-size:.72rem;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:.5px">Enrollments</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floating card -->
+      <div class="col-lg-6 d-none d-lg-block">
+        <div style="background:#181818;border:1px solid #2a2a2a;border-top:3px solid #F5C518;border-radius:12px;padding:1.5rem">
+          <div style="font-size:.67rem;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:1rem">
+            <i class="fas fa-fire" style="color:#F5C518"></i>&nbsp; Trending This Week
+          </div>
+          {% for c in featured_courses|slice:":3" %}
+          <a href="{% url 'course_detail' c.pk %}"
+             style="display:flex;align-items:center;gap:.85rem;padding:.8rem;background:#212121;border-radius:8px;margin-bottom:.55rem;border:1px solid #2a2a2a;text-decoration:none;transition:border-color .2s"
+             onmouseover="this.style.borderColor='#F5C518'"
+             onmouseout="this.style.borderColor='#2a2a2a'">
+            <div style="width:36px;height:36px;border-radius:8px;background:#F5C518;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i class="fas fa-graduation-cap" style="color:#0D0D0D;font-size:.85rem"></i>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:.82rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div>
+              <div style="font-size:.7rem;color:#666">{{ c.instructor.get_display_name }} &middot; ★ {{ c.avg_rating|floatformat:1 }}</div>
+            </div>
+            <div style="font-size:.75rem;font-weight:800;color:#F5C518;white-space:nowrap">
+              {% if c.price == 0 %}Free{% else %}Rs {{ c.price }}{% endif %}
+            </div>
+          </a>
+          {% empty %}
+          <div style="text-align:center;padding:1.5rem;color:#555;font-size:.83rem">
+            No courses yet — be the first trainer!
+          </div>
+          {% endfor %}
+          <a href="{% url 'course_list' %}"
+             style="display:block;text-align:right;font-size:.73rem;font-weight:700;color:#F5C518;margin-top:.75rem;text-decoration:none">
+            View All Courses →
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FEATURES ══════════════════════════════ -->
+<section style="background:#fff;padding:3.5rem 0">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="sec-label">Why Choose Traino</span>
+      <h2 class="sec-title">Everything You Need To Learn &amp; Grow</h2>
+    </div>
+    <div class="row g-3">
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-shield-alt"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Verified Trainers</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Admin-approved before publishing</p>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-download"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Offline Materials</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Download &amp; study anywhere</p>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-comments"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Real-Time Chat</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Message your trainer live</p>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-star"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Student Reviews</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Transparent star ratings</p>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-chart-line"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Progress Tracking</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Visual scores &amp; completion</p>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-4 col-6">
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:1.25rem 1rem;text-align:center;height:100%;transition:border-color .2s" onmouseover="this.style.borderColor='#F5C518'" onmouseout="this.style.borderColor='#e5e7eb'">
+          <div style="width:44px;height:44px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;color:#D4A017;font-size:1.1rem"><i class="fas fa-certificate"></i></div>
+          <div style="font-size:.84rem;font-weight:700;margin-bottom:.25rem">Certificates</div>
+          <p style="font-size:.73rem;color:#6b7280;margin:0;line-height:1.5">Auto-issued on completion</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FEATURED COURSES ══════════════════════ -->
+<section class="t-section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <span class="sec-label">Featured</span>
+        <h2 class="sec-title">
+          {% if query %}Results for &ldquo;{{ query }}&rdquo;{% else %}Popular Courses{% endif %}
+        </h2>
+      </div>
+      <a href="{% url 'course_list' %}" class="btn-outline-g btn-sm">
+        All Courses <i class="fas fa-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    {% if featured_courses %}
+    <div class="row g-3">
+      {% for c in featured_courses %}
+      <div class="col-xl-3 col-lg-4 col-md-6">
+        <a href="{% url 'course_detail' c.pk %}" style="text-decoration:none">
+          <div class="course-card">
+            <div class="cc-img">
+              {% if c.thumbnail %}
+                <img src="{{ c.thumbnail.url }}" alt="{{ c.title }}">
+              {% else %}
+                <div class="cc-img-placeholder"><i class="fas fa-graduation-cap"></i></div>
+              {% endif %}
+              {% if c.price == 0 %}
+                <span class="cc-badge free">Free</span>
+              {% elif c.is_featured %}
+                <span class="cc-badge top">Top</span>
+              {% else %}
+                <span class="cc-badge">Rs {{ c.price }}</span>
+              {% endif %}
+            </div>
+            <div class="cc-body">
+              {% if c.category %}
+                <div class="cc-cat">{{ c.get_category_display }}</div>
+              {% endif %}
+              <div class="cc-title">{{ c.title }}</div>
+              <div class="cc-inst">
+                <i class="fas fa-user-tie" style="font-size:.7rem"></i>
+                {{ c.instructor.get_display_name }}
+              </div>
+              <div class="cc-footer">
+                <span class="cc-stars">★</span>
+                <span class="cc-rating">{{ c.avg_rating|floatformat:1 }} ({{ c.total_enrolled }})</span>
+                <span class="cc-price {% if c.price == 0 %}free{% endif %}">
+                  {% if c.price == 0 %}Free{% else %}Rs {{ c.price }}{% endif %}
+                </span>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="text-center mt-4">
+      <a href="{% url 'course_list' %}" class="btn-y">
+        <i class="fas fa-th-large"></i> Browse All Courses
+      </a>
+    </div>
+
+    {% else %}
+    <div class="t-empty">
+      <i class="fas fa-graduation-cap t-empty-icon"></i>
+      <h5>{% if query %}No courses found for &ldquo;{{ query }}&rdquo;{% else %}No courses yet{% endif %}</h5>
+      {% if query %}
+        <a href="{% url 'home' %}" class="btn-outline-g btn-sm mt-2">Clear Search</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- ════════════ TOP TRAINERS ══════════════════════════ -->
+<section class="t-section" style="background:#fff">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+      <div>
+        <span class="sec-label">Expert Trainers</span>
+        <h2 class="sec-title">Learn From The Best</h2>
+      </div>
+      <a href="{% url 'instructor_list' %}" class="btn-outline-g btn-sm">
+        All Trainers <i class="fas fa-arrow-right ms-1"></i>
+      </a>
+    </div>
+    <div class="row g-3">
+      {% for inst in instructors %}
+      <div class="col-lg-3 col-md-4 col-sm-6">
+        <a href="{% url 'instructor_detail' inst.pk %}" style="text-decoration:none">
+          <div class="inst-card">
+            {% if inst.profile_pic %}
+              <img src="{{ inst.profile_pic.url }}" class="inst-av" alt="{{ inst.get_display_name }}">
+            {% else %}
+              <div class="inst-av-ph">{{ inst.get_display_name|first|upper }}</div>
+            {% endif %}
+            <div class="inst-name">{{ inst.get_display_name }}</div>
+            <div class="inst-desg">{{ inst.designation|default:"Trainer" }}</div>
+            <div class="inst-stats">
+              <span style="color:#F59E0B">★</span>
+              {{ inst.rating|floatformat:1 }}
+              &middot;
+              {{ inst.courses.count }} course{{ inst.courses.count|pluralize }}
+            </div>
+          </div>
+        </a>
+      </div>
+      {% empty %}
+      <div class="col-12">
+        <div class="t-empty"><p>No trainers registered yet.</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ CTA BANNER ════════════════════════════ -->
+{% if not user.is_authenticated %}
+<section class="t-section">
+  <div class="container">
+    <div style="background:#0D0D0D;border:1px solid #2a2a2a;border-top:3px solid #F5C518;border-radius:14px;padding:3rem 2.5rem;display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap">
+      <div>
+        <h2 style="color:#fff;font-size:clamp(1.3rem,3vw,1.8rem);margin-bottom:.55rem">
+          Ready to Start Learning?
+        </h2>
+        <p style="color:#666;font-size:.9rem;max-width:460px;margin:0">
+          Join thousands of students on Traino. Register free and start your training journey today.
+        </p>
+      </div>
+      <div class="d-flex gap-3 flex-wrap">
+        <a href="{% url 'register' %}" class="btn-y">
+          <i class="fas fa-user-plus"></i> Create Free Account
+        </a>
+        <a href="{% url 'course_list' %}" class="btn-ghost">
+          <i class="fas fa-graduation-cap"></i> Browse Courses
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

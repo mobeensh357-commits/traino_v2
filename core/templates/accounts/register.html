@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Create Account — Traino{% endblock %}
+{% block extra_css %}
+<style>
+.auth-wrap { min-height: calc(100vh - 64px); display: grid; grid-template-columns: 1fr 480px; }
+.auth-left { background: var(--black); padding: 3.5rem; display: flex; flex-direction: column; justify-content: center; border-right: 3px solid var(--yellow); position: relative; overflow: hidden; }
+.auth-left::after { content: ''; position: absolute; bottom: -60px; right: -60px; width: 260px; height: 260px; border-radius: 50%; background: rgba(245,197,24,.04); pointer-events: none; }
+.al-logo { font-size: 1.6rem; font-weight: 900; color: var(--white); margin-bottom: 2.5rem; }
+.al-logo span { color: var(--yellow); }
+.al-h { color: var(--white); font-size: 1.6rem; font-weight: 800; line-height: 1.25; margin-bottom: .7rem; }
+.al-sub { color: #888; font-size: .88rem; line-height: 1.7; margin-bottom: 2rem; }
+.al-feat { display: flex; align-items: center; gap: .65rem; margin-bottom: .7rem; }
+.al-feat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); flex-shrink: 0; }
+.al-feat span { color: #aaa; font-size: .85rem; }
+.auth-right { background: var(--white); padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center; overflow-y: auto; }
+.auth-title { font-size: 1.5rem; font-weight: 800; margin-bottom: .3rem; }
+.auth-sub { color: var(--grey-mid); font-size: .85rem; margin-bottom: 1.75rem; }
+.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+.role-btn { padding: .9rem 1rem; border: 2px solid var(--grey-border); border-radius: var(--radius-sm); cursor: pointer; text-align: center; background: var(--white); transition: var(--transition); }
+.role-btn .r-icon { font-size: 1.3rem; margin-bottom: .35rem; display: block; color: var(--grey-mid); }
+.role-btn .r-title { font-size: .88rem; font-weight: 700; color: var(--grey-dark); }
+.role-btn .r-hint { font-size: .72rem; color: var(--grey-mid); margin-top: .15rem; }
+.role-btn.selected, .role-btn:hover { border-color: var(--yellow); background: var(--yellow-pale); }
+.role-btn.selected .r-icon, .role-btn:hover .r-icon { color: var(--yellow-dark); }
+.role-btn.selected .r-title, .role-btn:hover .r-title { color: var(--black); }
+.pw-wrap { position: relative; }
+.pw-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--grey-mid); font-size: .85rem; }
+@media(max-width: 900px) { .auth-wrap { grid-template-columns: 1fr; } .auth-left { display: none; } .auth-right { padding: 2.5rem 1.5rem; min-height: 100vh; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <!-- Left Panel -->
+  <div class="auth-left">
+    <div class="al-logo">Train<span>o</span></div>
+    <h2 class="al-h">Start your training journey today</h2>
+    <p class="al-sub">Join thousands of students and trainers on Pakistan's #1 training platform.</p>
+    <div class="al-feat"><div class="al-feat-dot"></div><span>Learn from verified expert trainers</span></div>
+    <div class="al-feat"><div class="al-feat-dot"></div><span>Download materials for offline study</span></div>
+    <div class="al-feat"><div class="al-feat-dot"></div><span>Real-time chat with your trainer</span></div>
+    <div class="al-feat"><div class="al-feat-dot"></div><span>Track progress and earn certificates</span></div>
+    <div class="al-feat"><div class="al-feat-dot"></div><span>Health, fitness, tech & more</span></div>
+  </div>
+  <!-- Right Panel -->
+  <div class="auth-right">
+    <h1 class="auth-title">Create Your Account</h1>
+    <p class="auth-sub">Already have an account? <a href="{% url 'login' %}" style="color:var(--yellow-dark);font-weight:700">Sign in</a></p>
+
+    <form method="POST" id="regForm" novalidate>
+      {% csrf_token %}
+
+      <!-- Role Selection -->
+      <label class="t-label mb-2">I want to join as</label>
+      <div class="role-grid">
+        <label class="role-btn" id="btnStudent">
+          <input type="radio" name="role" value="student" style="display:none"
+                 {% if request.POST.role == 'student' %}checked{% endif %} required>
+          <span class="r-icon"><i class="fas fa-user-graduate"></i></span>
+          <div class="r-title">Trainee</div>
+          <div class="r-hint">I want to learn</div>
+        </label>
+        <label class="role-btn" id="btnInstructor">
+          <input type="radio" name="role" value="instructor" style="display:none"
+                 {% if request.POST.role == 'instructor' %}checked{% endif %}>
+          <span class="r-icon"><i class="fas fa-chalkboard-teacher"></i></span>
+          <div class="r-title">Trainer</div>
+          <div class="r-hint">I want to teach</div>
+        </label>
+      </div>
+
+      <div class="mb-3">
+        <label class="t-label">Username</label>
+        <input type="text" name="username" class="t-input" placeholder="Choose a username"
+               value="{{ form.username.value|default:'' }}" required>
+        {% if form.username.errors %}<div class="t-error">{{ form.username.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="t-label">Email Address</label>
+        <input type="email" name="email" class="t-input" placeholder="you@example.com"
+               value="{{ form.email.value|default:'' }}" required>
+        {% if form.email.errors %}<div class="t-error">{{ form.email.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="mb-3">
+        <label class="t-label">Password</label>
+        <div class="pw-wrap">
+          <input type="password" name="password1" id="pw1" class="t-input" placeholder="Minimum 8 characters" required>
+          <button type="button" class="pw-toggle" onclick="tp('pw1','e1')"><i class="fas fa-eye" id="e1"></i></button>
+        </div>
+        {% if form.password1.errors %}<div class="t-error">{{ form.password1.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <div class="mb-4">
+        <label class="t-label">Confirm Password</label>
+        <div class="pw-wrap">
+          <input type="password" name="password2" id="pw2" class="t-input" placeholder="Repeat password" required>
+          <button type="button" class="pw-toggle" onclick="tp('pw2','e2')"><i class="fas fa-eye" id="e2"></i></button>
+        </div>
+        {% if form.password2.errors %}<div class="t-error">{{ form.password2.errors|striptags }}</div>{% endif %}
+      </div>
+
+      <button type="submit" class="btn-y w-100 justify-content-center" style="padding:.8rem">
+        <i class="fas fa-user-plus"></i> Create Account
+      </button>
+    </form>
+
+    <p class="text-center mt-3" style="font-size:.78rem;color:var(--grey-mid)">
+      By signing up you agree to our <a href="{% url 'guideline' %}" style="color:var(--yellow-dark)">Terms of Use</a>
+    </p>
+  </div>
+</div>
+
+<script>
+function tp(id,eid){var f=document.getElementById(id),e=document.getElementById(eid);if(f.type==='password'){f.type='text';e.classList.replace('fa-eye','fa-eye-slash')}else{f.type='password';e.classList.replace('fa-eye-slash','fa-eye')}}
+// Role selection highlight
+document.querySelectorAll('input[name="role"]').forEach(function(r){
+  r.addEventListener('change',function(){
+    document.querySelectorAll('.role-btn').forEach(function(b){b.classList.remove('selected')});
+    r.closest('.role-btn').classList.add('selected');
+  });
+  if(r.checked) r.closest('.role-btn').classList.add('selected');
+});
+document.getElementById('regForm').addEventListener('submit',function(e){
+  if(!document.querySelector('input[name="role"]:checked')){e.preventDefault();alert('Please select your role.');}
+  else if(document.getElementById('pw1').value!==document.getElementById('pw2').value){e.preventDefault();alert('Passwords do not match.');}
+});
+</script>
+{% endblock %}

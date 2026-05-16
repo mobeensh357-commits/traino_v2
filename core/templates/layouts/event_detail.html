@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }} · Traino{% endblock %}
+{% block content %}
+<section class="t-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="t-card">
+          <h1>{{ event.title }}</h1>
+          <div class="meta mb-4">
+            <span><i class="fas fa-calendar-alt"></i> {{ event.date|date:"F j, Y" }}</span>
+            <span><i class="fas fa-clock"></i> {{ event.time|default:"All day" }}</span>
+            <span><i class="fas fa-map-marker-alt"></i> {{ event.location|default:"Online" }}</span>
+          </div>
+          <div class="event-description">
+            {{ event.description|linebreaks }}
+          </div>
+          {% if event.registration_link %}
+          <a href="{{ event.registration_link }}" class="btn-y mt-4" target="_blank">Register Now</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="t-card">
+          <h5>Event Info</h5>
+          <ul class="list-unstyled">
+            <li><strong>Organizer:</strong> {{ event.organizer|default:"Traino Team" }}</li>
+            <li><strong>Capacity:</strong> {{ event.capacity|default:"Unlimited" }}</li>
+            <li><strong>Price:</strong> {{  event.price|default:"Free"}}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

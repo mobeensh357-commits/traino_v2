@@ -1,0 +1,77 @@
+<!-- Enroll Card Partial — included in courses/detail.html -->
+<div class="enroll-card">
+  {% if course.thumbnail %}
+  <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}"
+       style="width:100%;height:155px;object-fit:cover;border-radius:8px;margin-bottom:1rem">
+  {% endif %}
+
+  <!-- Price -->
+  <div class="enroll-price {% if course.price == 0 %}free{% endif %} mb-3">
+    {% if course.price == 0 %}Free{% else %}Rs {{ course.price }}{% endif %}
+  </div>
+
+  <!-- Enroll / Enrolled state -->
+  {% if is_enrolled %}
+    <div class="tbadge tb-ok w-100 justify-content-center mb-3"
+         style="padding:.6rem;font-size:.85rem;display:flex">
+      <i class="fas fa-check-circle me-2"></i> You are enrolled
+    </div>
+    <a href="{% url 'my_courses' %}" class="btn-dark btn-block justify-content-center mb-2">
+      <i class="fas fa-book"></i> Go to My Courses
+    </a>
+
+  {% elif user.is_authenticated and user.is_student %}
+    <a href="{% url 'enroll' course.pk %}" class="btn-y btn-block justify-content-center mb-2"
+       style="padding:.85rem;font-size:.95rem">
+      <i class="fas fa-user-plus"></i>
+      {% if course.price == 0 %}Enroll Now — Free{% else %}Buy Now — Rs {{ course.price }}{% endif %}
+    </a>
+
+  {% elif not user.is_authenticated %}
+    <a href="{% url 'login' %}?next={{ request.path }}" class="btn-y btn-block justify-content-center mb-2"
+       style="padding:.85rem;font-size:.95rem">
+      <i class="fas fa-sign-in-alt"></i> Sign In to Enroll
+    </a>
+    <p style="text-align:center;font-size:.75rem;color:#9ca3af;margin-top:.5rem">
+      Don't have an account? <a href="{% url 'register' %}" style="color:#D4A017;font-weight:600">Register free</a>
+    </p>
+  {% endif %}
+
+  <!-- Course meta -->
+  <ul style="list-style:none;padding:0;margin:1rem 0 0;display:flex;flex-direction:column;gap:.65rem">
+    {% if course.level %}
+    <li style="display:flex;justify-content:space-between;font-size:.82rem">
+      <span style="color:#6b7280"><i class="fas fa-signal me-2"></i>Level</span>
+      <span style="font-weight:700">{{ course.get_level_display }}</span>
+    </li>
+    {% endif %}
+    <li style="display:flex;justify-content:space-between;font-size:.82rem">
+      <span style="color:#6b7280"><i class="fas fa-users me-2"></i>Enrolled</span>
+      <span style="font-weight:700">{{ course.total_enrolled }} students</span>
+    </li>
+    {% if course.language %}
+    <li style="display:flex;justify-content:space-between;font-size:.82rem">
+      <span style="color:#6b7280"><i class="fas fa-globe me-2"></i>Language</span>
+      <span style="font-weight:700">{{ course.language }}</span>
+    </li>
+    {% endif %}
+    <li style="display:flex;justify-content:space-between;font-size:.82rem">
+      <span style="color:#6b7280"><i class="fas fa-star me-2" style="color:#F59E0B"></i>Rating</span>
+      <span style="font-weight:700">{{ course.avg_rating|floatformat:1 }} / 5</span>
+    </li>
+    <li style="display:flex;justify-content:space-between;font-size:.82rem">
+      <span style="color:#6b7280"><i class="fas fa-book me-2"></i>Lectures</span>
+      <span style="font-weight:700">{{ total_materials }}</span>
+    </li>
+  </ul>
+
+  <!-- Share / wishlist row -->
+  {% if user.is_authenticated and user.is_student and not is_enrolled %}
+  <div class="t-divider mt-3 mb-3"></div>
+  <a href="{% url 'add_to_wishlist' course.pk %}"
+     style="display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:.82rem;font-weight:600;color:{% if is_wishlisted %}#DC2626{% else %}#6b7280{% endif %}">
+    <i class="fas fa-heart"></i>
+    {% if is_wishlisted %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+  </a>
+  {% endif %}
+</div>

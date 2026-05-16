@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Support Center — Traino{% endblock %}
+{% block content %}
+<section class="page-banner">
+  <div class="container">
+    <h1>Support Center</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item active">Support</li>
+    </ol></nav>
+  </div>
+</section>
+<section class="t-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="sec-label">How Can We Help?</span>
+      <h2 class="sec-title mb-3">Frequently Asked Questions</h2>
+      <div style="max-width:460px;margin:0 auto;position:relative">
+        <input type="text" id="faqSearch" class="t-input" placeholder="Search for answers..." style="padding-left:2.5rem">
+        <i class="fas fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af"></i>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-5">
+      <div class="col-md-4">
+        <div class="t-card text-center t-card-hover" style="cursor:pointer" onclick="location.href='{% url 'contact' %}'">
+          <div style="width:48px;height:48px;border-radius:12px;background:#FEF3C7;color:#D4A017;font-size:1.1rem;display:flex;align-items:center;justify-content:center;margin:0 auto .85rem"><i class="fas fa-headset"></i></div>
+          <h5 style="font-size:.9rem;margin-bottom:.3rem">Contact Support</h5>
+          <p style="color:#6b7280;font-size:.8rem;margin:0">Send a message — reply within 1 hour.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="t-card text-center t-card-hover" style="cursor:pointer" onclick="location.href='{% url 'guideline' %}'">
+          <div style="width:48px;height:48px;border-radius:12px;background:#FEF3C7;color:#D4A017;font-size:1.1rem;display:flex;align-items:center;justify-content:center;margin:0 auto .85rem"><i class="fas fa-book-open"></i></div>
+          <h5 style="font-size:.9rem;margin-bottom:.3rem">How It Works</h5>
+          <p style="color:#6b7280;font-size:.8rem;margin:0">Step-by-step guide for students and trainers.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="t-card text-center">
+          <div style="width:48px;height:48px;border-radius:12px;background:#FEF3C7;color:#D4A017;font-size:1.1rem;display:flex;align-items:center;justify-content:center;margin:0 auto .85rem"><i class="fas fa-envelope"></i></div>
+          <h5 style="font-size:.9rem;margin-bottom:.3rem">Email Us</h5>
+          <p style="color:#6b7280;font-size:.8rem;margin:0">traino.trainingaide9@gmail.com</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="faqList">
+      {% for q,a in faqs %}
+      <div class="faq-item" style="border:1px solid #e5e7eb;border-radius:8px;margin-bottom:.5rem;overflow:hidden">
+        <button onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block';this.querySelector('.faq-icon').textContent=this.nextElementSibling.style.display==='block'?'-':'';"
+                style="width:100%;text-align:left;background:#fff;border:none;padding:.9rem 1rem;font-weight:600;font-size:.87rem;color:#111;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif">
+          {{ q }}<span class="faq-icon" style="font-size:1.1rem;color:#F5C518"></span>
+        </button>
+        <div style="display:none;padding:.75rem 1rem 1rem;font-size:.84rem;color:#6b7280;border-top:1px solid #f3f4f6">{{ a }}</div>
+      </div>
+      {% empty %}
+      {% for qa in "How do I register?|Click Sign Up Free. Select Trainee or Trainer, fill in your details — done in under a minute.;How do I enroll in a course?|Find a course you like, click on it, then click Enroll Now. Free courses are instant.;How does trainer approval work?|After registering, complete your profile and upload a verification document. Admin reviews within 24 hours.;Can I download materials offline?|Yes! Enrolled students can download verified course materials from the course detail page.;How do I reset my password?|Click Forgot Password on the Sign In page. Enter your email and we will send a 6-digit OTP.;How do I chat with my trainer?|Once enrolled, use the Chat button on the course detail page to message your trainer live.;How are certificates issued?|Certificates are auto-generated when your progress reaches 100% on any course.;What payment methods are accepted?|We currently support dummy card payment. Real payment gateways will be added in a future update."|split:";" %}
+      {% with parts=qa|cut:"" %}
+      <div class="faq-item" style="border:1px solid #e5e7eb;border-radius:8px;margin-bottom:.5rem;overflow:hidden">
+        <button onclick="var b=this.nextElementSibling;b.style.display=b.style.display==='block'?'none':'block';this.querySelector('.faq-icon').textContent=b.style.display==='block'?'-':'+';"
+                style="width:100%;text-align:left;background:#fff;border:none;padding:.9rem 1rem;font-weight:600;font-size:.87rem;color:#111;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:'Inter',sans-serif">
+          Frequently Asked Question <span class="faq-icon" style="font-size:1.1rem;color:#F5C518">+</span>
+        </button>
+        <div style="display:none;padding:.75rem 1rem 1rem;font-size:.84rem;color:#6b7280;border-top:1px solid #f3f4f6">Answer goes here.</div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-5">
+      <p style="color:#6b7280;font-size:.88rem;margin-bottom:1rem">Still have questions?</p>
+      <a href="{% url 'contact' %}" class="btn-y"><i class="fas fa-envelope"></i> Contact Our Team</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.getElementById('faqSearch').addEventListener('input', function(){
+  var q = this.value.toLowerCase();
+  document.querySelectorAll('.faq-item').forEach(function(el){
+    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

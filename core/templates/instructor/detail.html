@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %}{{ instructor.get_display_name }} — Traino{% endblock %}
+{% block content %}
+
+<!-- Instructor Hero -->
+<section style="background:#0D0D0D;border-bottom:3px solid #F5C518;padding:3rem 0">
+  <div class="container">
+    <div class="row align-items-center g-4">
+      <div class="col-auto">
+        {% if instructor.profile_pic %}
+          <img src="{{ instructor.profile_pic.url }}" alt="{{ instructor.get_display_name }}"
+               style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #F5C518">
+        {% else %}
+          <div style="width:100px;height:100px;border-radius:50%;background:#F5C518;color:#0D0D0D;font-weight:900;font-size:2.5rem;display:flex;align-items:center;justify-content:center;border:3px solid #F5C518">
+            {{ instructor.get_display_name|first|upper }}
+          </div>
+        {% endif %}
+      </div>
+      <div>
+        <h1 style="color:#fff;font-size:clamp(1.4rem,3vw,2rem);margin-bottom:.35rem">
+          {{ instructor.get_display_name }}
+        </h1>
+        <div style="color:#F5C518;font-size:.88rem;font-weight:600;margin-bottom:.6rem">
+          {{ instructor.designation|default:"Trainer" }}
+        </div>
+        <div class="d-flex gap-3 flex-wrap" style="font-size:.82rem;color:#888">
+          <span><i class="fas fa-star" style="color:#F59E0B"></i> {{ instructor.rating|floatformat:1 }} Rating</span>
+          <span><i class="fas fa-graduation-cap"></i> {{ total_courses }} Course{{ total_courses|pluralize }}</span>
+          <span><i class="fas fa-users"></i> {{ total_students }} Student{{ total_students|pluralize }}</span>
+          {% if instructor.city %}
+          <span><i class="fas fa-map-marker-alt"></i> {{ instructor.city }}{% if instructor.province %}, {{ instructor.province }}{% endif %}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="t-section">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Left: bio + courses -->
+      <div class="col-lg-8">
+
+        {% if instructor.bio %}
+        <div class="t-card mb-4">
+          <h4 style="font-size:.95rem;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem">
+            <i class="fas fa-user" style="color:#F5C518"></i> About
+          </h4>
+          <p style="color:#6b7280;line-height:1.8;font-size:.9rem;margin:0">{{ instructor.bio }}</p>
+        </div>
+        {% endif %}
+
+        {% if instructor.experience %}
+        <div class="t-card mb-4">
+          <h4 style="font-size:.95rem;margin-bottom:.85rem;display:flex;align-items:center;gap:.5rem">
+            <i class="fas fa-briefcase" style="color:#F5C518"></i> Experience
+          </h4>
+          <p style="color:#6b7280;line-height:1.8;font-size:.9rem;margin:0">{{ instructor.experience }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Courses by this instructor -->
+        <div class="t-card">
+          <h4 style="font-size:.95rem;margin-bottom:1.1rem;display:flex;align-items:center;gap:.5rem">
+            <i class="fas fa-graduation-cap" style="color:#F5C518"></i>
+            Courses by {{ instructor.get_display_name }}
+          </h4>
+          {% if courses %}
+          <div class="row g-3">
+            {% for c in courses %}
+            <div class="col-sm-6">
+              <a href="{% url 'course_detail' c.pk %}" style="text-decoration:none">
+                <div class="course-card">
+                  <div class="cc-img">
+                    {% if c.thumbnail %}
+                      <img src="{{ c.thumbnail.url }}" alt="{{ c.title }}">
+                    {% else %}
+                      <div class="cc-img-placeholder"><i class="fas fa-graduation-cap"></i></div>
+                    {% endif %}
+                    {% if c.price == 0 %}<span class="cc-badge free">Free</span>
+                    {% else %}<span class="cc-badge">Rs {{ c.price }}</span>{% endif %}
+                  </div>
+                  <div class="cc-body">
+                    {% if c.category %}<div class="cc-cat">{{ c.get_category_display }}</div>{% endif %}
+                    <div class="cc-title">{{ c.title }}</div>
+                    <div class="cc-footer">
+                      <span class="cc-stars">★</span>
+                      <span class="cc-rating">{{ c.avg_rating|floatformat:1 }}</span>
+                      <span class="cc-price {% if c.price == 0 %}free{% endif %}">
+                        {% if c.price == 0 %}Free{% else %}Rs {{ c.price }}{% endif %}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="t-empty" style="padding:2rem 0">
+            <p style="color:#9ca3af;font-size:.85rem">No courses published yet.</p>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+
+      <!-- Right: quick stats sidebar -->
+      <div class="col-lg-4">
+        <div class="t-card mb-3">
+          <h5 style="font-size:.88rem;font-weight:700;margin-bottom:1rem;padding-bottom:.65rem;border-bottom:1px solid #e5e7eb">
+            Quick Info
+          </h5>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.75rem">
+            {% if instructor.education %}
+            <li style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;color:#D4A017;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-graduation-cap"></i></div>
+              <div><div style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase">Education</div><div style="font-size:.84rem;font-weight:600">{{ instructor.education }}</div></div>
+            </li>
+            {% endif %}
+            {% if instructor.city %}
+            <li style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;color:#D4A017;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-map-marker-alt"></i></div>
+              <div><div style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase">Location</div><div style="font-size:.84rem;font-weight:600">{{ instructor.city }}{% if instructor.province %}, {{ instructor.province }}{% endif %}</div></div>
+            </li>
+            {% endif %}
+            <li style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;color:#D4A017;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-graduation-cap"></i></div>
+              <div><div style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase">Total Courses</div><div style="font-size:.84rem;font-weight:600">{{ total_courses }}</div></div>
+            </li>
+            <li style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;color:#D4A017;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-users"></i></div>
+              <div><div style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase">Total Students</div><div style="font-size:.84rem;font-weight:600">{{ total_students }}</div></div>
+            </li>
+            <li style="display:flex;gap:.75rem;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;color:#D4A017;font-size:.78rem;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fas fa-star"></i></div>
+              <div><div style="font-size:.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase">Rating</div><div style="font-size:.84rem;font-weight:600">{{ instructor.rating|floatformat:1 }} / 5</div></div>
+            </li>
+          </ul>
+        </div>
+
+        {% if user.is_authenticated and user.is_student %}
+        <div class="t-card">
+          <h5 style="font-size:.85rem;font-weight:700;margin-bottom:.75rem">Enroll in a Course</h5>
+          <p style="font-size:.8rem;color:#6b7280;margin-bottom:.85rem">Browse courses by this trainer and enroll to access live chat.</p>
+          <a href="{% url 'course_list' %}?q={{ instructor.get_display_name }}" class="btn-y btn-block justify-content-center" style="padding:.6rem">
+            <i class="fas fa-search"></i> View Courses
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
