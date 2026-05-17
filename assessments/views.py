@@ -25,12 +25,17 @@ logger = logging.getLogger(__name__)
 def submit_assessment(request, pk):
     """
     Student submits a file-upload or MCQ assessment.
-    Checks: enrollment, deadline, duplicate graded submission.
+    Checks: enrollment, is_published, deadline, duplicate graded submission.
     """
     assessment = get_object_or_404(Assessment, pk=pk)
 
     if not request.user.is_student:
         messages.error(request, 'Only students can submit assessments.')
+        return redirect('course_detail', pk=assessment.course.pk)
+
+    # Must be published by admin
+    if not assessment.is_published:
+        messages.error(request, 'This assessment is not yet available.')
         return redirect('course_detail', pk=assessment.course.pk)
 
     # Must be enrolled
@@ -67,7 +72,11 @@ def submit_assessment(request, pk):
         if assessment.mode == 'file':
             if not file:
                 messages.error(request, 'Please upload your answer file.')
-                return render(request, 'assessments/submit.html', {'assessment': assessment})
+                return render(request, 'assessments/submit.html', {
+                    'assessment': assessment,
+                    'existing': existing,
+                    'questions': None,
+                })
 
             try:
                 if existing:
@@ -92,7 +101,7 @@ def submit_assessment(request, pk):
                         f'"{assessment.title}" in {assessment.course.title}.'
                     ),
                     notif_type='info',
-                    link=f'/assessments/submissions/',
+                    link='/assessments/submissions/',
                 )
                 messages.success(request, 'Assessment submitted successfully!')
 
@@ -168,6 +177,63 @@ def submit_assessment(request, pk):
 
 
 # ─────────────────────────────────────────────────────────
+#  STUDENT: Remove Submission (ungraded only)
+# ─────────────────────────────────────────────────────────
+@login_required
+def remove_submission(request, pk):
+    """
+    Student removes their own ungraded submission so they can resubmit.
+    Only allowed if submission is not yet graded.
+    POST required for safety.
+    """
+    submission = get_object_or_404(Submission, pk=pk, student=request.user)
+
+    if submission.is_graded:
+        messages.error(request, 'Graded submissions cannot be removed.')
+        return redirect('course_detail', pk=submission.assessment.course.pk)
+
+    if request.method == 'POST':
+        course_pk = submission.assessment.course.pk
+        submission.delete()
+        messages.success(request, 'Submission removed. You may resubmit now.')
+        return redirect('course_detail', pk=course_pk)
+
+    # GET — redirect back (POST is required)
+    return redirect('course_detail', pk=submission.assessment.course.pk)
+
+
+# ─────────────────────────────────────────────────────────
+#  STUDENT: My Submissions
+# ─────────────────────────────────────────────────────────
+@login_required
+def my_submissions(request):
+    """
+    Student views all their submissions across all courses,
+    with marks, feedback and grading status.
+    """
+    if not request.user.is_student:
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+
+    submissions = Submission.objects.filter(
+        student=request.user
+    ).select_related(
+        'assessment', 'assessment__course', 'assessment__course__instructor'
+    ).order_by('-submitted_at')
+
+    total   = submissions.count()
+    graded  = submissions.filter(is_graded=True).count()
+    pending = submissions.filter(is_graded=False).count()
+
+    return render(request, 'assessments/my_submissions.html', {
+        'submissions': submissions,
+        'total':       total,
+        'graded':      graded,
+        'pending':     pending,
+    })
+
+
+# ─────────────────────────────────────────────────────────
 #  INSTRUCTOR: View All Submissions
 # ─────────────────────────────────────────────────────────
 @login_required
@@ -194,17 +260,18 @@ def instructor_submissions(request):
     elif status == 'graded':
         submissions = submissions.filter(is_graded=True)
 
-    # Count stats
-    total   = submissions.count()
-    pending = Submission.objects.filter(
-        assessment__course__instructor=profile, is_graded=False
-    ).count()
+    # Count stats always from full queryset (not filtered)
+    all_subs = Submission.objects.filter(assessment__course__instructor=profile)
+    total   = all_subs.count()
+    pending = all_subs.filter(is_graded=False).count()
+    graded  = all_subs.filter(is_graded=True).count()
 
     return render(request, 'assessments/submissions.html', {
         'submissions': submissions,
         'status':      status,
         'total':       total,
         'pending':     pending,
+        'graded':      graded,
     })
 
 
@@ -280,6 +347,7 @@ def create_assessment(request, course_id):
     """
     Instructor adds an assignment or quiz to their course.
     Validates ownership, due date, and required fields.
+    Assessment starts as unpublished — admin must publish it.
     """
     course  = get_object_or_404(Course, pk=course_id)
     profile = get_object_or_404(InstructorProfile, user=request.user)
@@ -319,20 +387,22 @@ def create_assessment(request, course_id):
 
         try:
             assessment = Assessment.objects.create(
-                course      =course,
-                instructor  =profile,
-                title       =title,
-                assess_type =assess_type,
-                mode        =mode,
-                total_marks =total_marks,
-                description =description,
-                due_date    =parsed_due,
-                file        =file,
+                course       = course,
+                instructor   = profile,
+                title        = title,
+                assess_type  = assess_type,
+                mode         = mode,
+                total_marks  = total_marks,
+                description  = description,
+                due_date     = parsed_due,
+                file         = file,
+                is_published = False,  # admin publishes after review
             )
             messages.success(
                 request,
                 f'Assessment "{title}" created. '
-                f'{"Add MCQ questions below." if mode == "mcq" else ""}'
+                f'{"Add MCQ questions below." if mode == "mcq" else ""} '
+                f'An admin must publish it before students can see it.'
             )
             if mode == 'mcq':
                 return redirect('add_questions', assessment_id=assessment.pk)
@@ -377,17 +447,17 @@ def add_questions(request, assessment_id):
         else:
             try:
                 q = Question.objects.create(
-                    assessment    =assessment,
-                    question_text =q_text,
-                    marks         =int(marks) if marks.isdigit() else 1,
-                    order         =assessment.questions.count() + 1,
+                    assessment    = assessment,
+                    question_text = q_text,
+                    marks         = int(marks) if marks.isdigit() else 1,
+                    order         = assessment.questions.count() + 1,
                 )
                 for i, opt_text in enumerate(opts, start=1):
                     if opt_text:
                         Option.objects.create(
-                            question    =q,
-                            option_text =opt_text,
-                            is_correct  =(str(i) == correct),
+                            question    = q,
+                            option_text = opt_text,
+                            is_correct  = (str(i) == correct),
                         )
                 messages.success(request, f'Question {assessment.questions.count()} added.')
             except DatabaseError as e:

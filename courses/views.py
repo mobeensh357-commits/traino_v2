@@ -73,20 +73,42 @@ def course_list(request):
 
 
 def course_detail(request, pk):
-    """
-    Course detail page – shows curriculum, instructor info, reviews, and enroll button.
-    """
-    course = get_object_or_404(Course, pk=pk, status='approved')
+    # Get the course (first check existence, later check permissions)
+    try:
+        course = Course.objects.get(pk=pk)
+    except Course.DoesNotExist:
+        raise Http404("Course does not exist")
+
+    # ---- PREVIEW PERMISSION (instructors/admins can see non-approved courses) ----
+    if course.status != 'approved':
+        # Only allow instructor who owns the course or a staff/admin
+        if request.user.is_authenticated:
+            is_owner = request.user.is_teacher and course.instructor.user == request.user
+            is_admin = request.user.is_staff
+            if not (is_owner or is_admin):
+                raise Http404("Course not available")
+        else:
+            raise Http404("Course not available")
+
     # Assessments for this course
     assessments = Assessment.objects.filter(course=course).order_by('due_date', '-created_at')
 
+
     # Which assessments has the current student already submitted?
     submitted_assessments = []
+    my_submissions_data   = []  # full submission data for 3-state button logic
     if request.user.is_authenticated and request.user.is_student:
-        submitted_assessments = Submission.objects.filter(
+        submitted_assessments = list(Submission.objects.filter(
             assessment__course=course,
             student=request.user
-        ).values_list('assessment_id', flat=True)
+        ).values_list('assessment_id', flat=True))
+
+        # Full submission data for 3-state button logic (grade, remove)
+        my_submissions_data = list(Submission.objects.filter(
+            assessment__course=course,
+            student=request.user
+        ).values('id', 'assessment_id', 'is_graded', 'marks', 'feedback'))
+
 
     sections = Section.objects.filter(course=course).prefetch_related('materials')
     reviews = course.reviews.filter(is_visible=True).select_related('student')[:10]
@@ -123,19 +145,24 @@ def course_detail(request, pk):
     # Total materials count
     total_materials = Material.objects.filter(section__course=course).count()
 
+    # Filter assessments: students only see published ones
+    if request.user.is_authenticated and request.user.is_student:
+        assessments = assessments.filter(is_published=True)
+
     return render(request, 'courses/detail.html', {
-        'course': course,
-        'sections': sections,
-        'reviews': reviews,
-        'is_enrolled': is_enrolled,
-        'is_wishlisted': is_wishlisted,
-        'total_materials': total_materials,
-        'avg_rating': course.avg_rating,
-        'review_count': reviews.count(),
+        'course':                 course,
+        'sections':               sections,
+        'reviews':                reviews,
+        'is_enrolled':            is_enrolled,
+        'is_wishlisted':          is_wishlisted,
+        'total_materials':        total_materials,
+        'avg_rating':             course.avg_rating,
+        'review_count':           reviews.count(),
         'completed_material_ids': completed_material_ids,
-        'progress_percentage': progress_percentage,
-        'assessments': assessments,
-        'submitted_assessments': submitted_assessments,
+        'progress_percentage':    progress_percentage,
+        'assessments':            assessments,
+        'submitted_assessments':  submitted_assessments,
+        'my_submissions_data':    my_submissions_data,
     })
 
 @login_required

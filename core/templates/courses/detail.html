@@ -150,73 +150,102 @@
 <div class="t-card mb-4">
   <h4 style="font-size:.95rem;margin-bottom:1rem">
     <i class="fas fa-tasks me-2" style="color:#F5C518"></i>
-    Assessments & Quizzes
+    Assessments &amp; Quizzes
     <span style="font-size:.78rem;font-weight:500;color:#9ca3af;margin-left:.5rem">{{ assessments|length }} item{{ assessments|pluralize }}</span>
   </h4>
 
   {% for assessment in assessments %}
-  <div class="curriculum-section" style="border-left: 3px solid {% if assessment.id in submitted_assessments %} #16A34A {% else %} #F5C518 {% endif %}; margin-bottom: 15px;">
+  {% if not request.user.is_student or assessment.is_published %}
+  <div class="curriculum-section" style="border-left:3px solid {% if assessment.id in submitted_assessments %}#16A34A{% else %}#F5C518{% endif %};margin-bottom:12px;border-radius:0 8px 8px 0">
 
-    <!-- Clickable header -->
-    <div class="cs-header" onclick="toggleSection(this.parentNode.querySelector('.cs-body'))" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding: 12px; background: #f9fafb; border-radius: 8px;">
-      <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap">
-        <span class="tbadge tb-y" style="font-size:.7rem; padding:.2rem .6rem">
-          {{ assessment.get_assess_type_display }}
-        </span>
-        <span style="font-weight:600; font-size:.85rem">{{ assessment.title }}</span>
+    <div class="cs-header" onclick="toggleSection(this)"
+         style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#f9fafb;border-radius:8px">
+      <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+        <span class="tbadge tb-y" style="font-size:.68rem;padding:.2rem .6rem">{{ assessment.get_assess_type_display }}</span>
+        <span style="font-weight:600;font-size:.85rem">{{ assessment.title }}</span>
         {% if assessment.id in submitted_assessments %}
-          <span class="tbadge tb-ok" style="font-size:.65rem">
-            <i class="fas fa-check-circle"></i> Submitted
-          </span>
+          <span class="tbadge tb-ok" style="font-size:.65rem"><i class="fas fa-check-circle"></i> Submitted</span>
+        {% endif %}
+        {% if not assessment.is_published %}
+          <span class="tbadge tb-warn" style="font-size:.65rem"><i class="fas fa-eye-slash"></i> Unpublished</span>
         {% endif %}
       </div>
-      <div style="display:flex; align-items:center; gap:.75rem">
-        <span style="font-size:.75rem; color:#9ca3af">Max: {{ assessment.total_marks }}</span>
-        <i class="fas fa-chevron-down cs-toggle-icon" style="font-size:.75rem; color:#9ca3af; transition:transform .2s"></i>
+      <div style="display:flex;align-items:center;gap:.75rem">
+        <span style="font-size:.75rem;color:#9ca3af">Max: {{ assessment.total_marks }}</span>
+        <i class="fas fa-chevron-down cs-toggle-icon" style="font-size:.75rem;color:#9ca3af;transition:transform .2s"></i>
       </div>
     </div>
 
-    <!-- Expandable body (set display:block to always show button) -->
-    <div class="cs-body" style="display:block; padding:.75rem 1rem 1rem 1rem;">
+    <div class="cs-body" style="display:none;padding:.85rem 1rem 1rem 1rem">
       {% if assessment.description %}
-        <p style="color:#6b7280; font-size:.82rem; margin-bottom:.85rem">{{ assessment.description }}</p>
+        <p style="color:#6b7280;font-size:.82rem;margin-bottom:.85rem;line-height:1.7">{{ assessment.description }}</p>
       {% endif %}
       {% if assessment.due_date %}
-        <div style="margin-bottom:.85rem; font-size:.78rem; color:#D97706; background:#FFFBEA; padding:.4rem .8rem; border-radius:6px; display:inline-block">
+        <div style="margin-bottom:.85rem;font-size:.78rem;color:#D97706;background:#FFFBEA;padding:.4rem .85rem;border-radius:6px;display:inline-flex;align-items:center;gap:.45rem">
           <i class="fas fa-clock"></i> Due: {{ assessment.due_date|date:"d M Y, H:i" }}
         </div>
       {% endif %}
-      {% if assessment.file %}
-        <div style="margin-bottom:.85rem">
-          <a href="{{ assessment.file.url }}" target="_blank" class="btn-outline-g btn-sm" style="font-size:.75rem">
-            <i class="fas fa-download"></i> Download Question Paper
-          </a>
-        </div>
-      {% endif %}
 
-      <!-- Button / Badge logic: show only badge if already submitted, otherwise show button -->
-      <div style="margin-top: 10px;">
-        {% if request.user.is_authenticated and is_enrolled %}
-          {% if assessment.id in submitted_assessments %}
-            <span class="tbadge tb-ok">
-              <i class="fas fa-check"></i> Already Submitted
-            </span>
-          {% else %}
-            <a href="{% url 'submit_assessment' assessment.pk %}" class="btn-y btn-sm" style="margin-right: 8px;">
-              <i class="fas fa-paper-plane"></i> Submit Assessment
-            </a>
+      <div style="margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+
+        {# STATE 1: enrolled student, not yet submitted #}
+        {% if request.user.is_authenticated and is_enrolled and assessment.id not in submitted_assessments %}
+          {% if assessment.file %}
+          <a href="{{ assessment.file.url }}" target="_blank" class="btn-outline-g btn-sm">
+            <i class="fas fa-download"></i> Download Paper
+          </a>
           {% endif %}
+          <a href="{% url 'submit_assessment' assessment.pk %}" class="btn-y btn-sm">
+            <i class="fas fa-paper-plane"></i> Submit Assessment
+          </a>
+
+        {# STATES 2 & 3: enrolled, already submitted #}
+        {% elif request.user.is_authenticated and is_enrolled and assessment.id in submitted_assessments %}
+          {% for sub in my_submissions_data %}
+            {% if sub.assessment_id == assessment.id %}
+              {% if sub.is_graded %}
+                <span class="tbadge tb-ok" style="font-size:.82rem;padding:.35rem .9rem">
+                  <i class="fas fa-star me-1"></i>Score: {{ sub.marks }}/{{ assessment.total_marks }}
+                </span>
+                {% if sub.feedback %}
+                  <span style="font-size:.76rem;color:#6b7280;font-style:italic">{{ sub.feedback|truncatechars:55 }}</span>
+                {% endif %}
+              {% else %}
+                <span class="tbadge tb-warn" style="font-size:.8rem;padding:.35rem .9rem">
+                  <i class="fas fa-clock me-1"></i>Pending Review
+                </span>
+                <form method="POST" action="{% url 'remove_submission' sub.id %}" style="display:inline"
+                      onsubmit="return confirm('Remove your submission? You can resubmit afterwards.')">
+                  {% csrf_token %}
+                  <button type="submit" style="background:#FEF2F2;border:1.5px solid #DC2626;color:#DC2626;border-radius:6px;padding:.3rem .75rem;font-size:.78rem;font-weight:600;cursor:pointer">
+                    <i class="fas fa-trash-alt me-1"></i>Remove
+                  </button>
+                </form>
+              {% endif %}
+            {% endif %}
+          {% empty %}
+            <span class="tbadge tb-ok"><i class="fas fa-check"></i> Submitted</span>
+          {% endfor %}
+
         {% elif not request.user.is_authenticated %}
-          <a href="{% url 'login' %}" class="btn-outline-g btn-sm">Login to Submit</a>
+          <a href="{% url 'login' %}" class="btn-outline-g btn-sm">
+            <i class="fas fa-sign-in-alt"></i> Login to Submit
+          </a>
+
         {% elif request.user.is_teacher %}
-          <span class="tbadge tb-grey">Instructor view only</span>
+          <span class="tbadge tb-grey" style="font-size:.78rem">
+            <i class="fas fa-eye me-1"></i>Instructor view
+          </span>
         {% endif %}
+
       </div>
     </div>
   </div>
+  {% endif %}
   {% endfor %}
 </div>
 {% endif %}
+
         <!-- Reviews -->
         <div class="t-card mb-4">
           <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
@@ -359,10 +388,11 @@
 
 {% block extra_js %}
 <script>
-// Toggle section (already existing)
+// Toggle section — `header` is the .cs-header element
 function toggleSection(header) {
   var body = header.nextElementSibling;
   var icon = header.querySelector('.cs-toggle-icon');
+  if (!body) return;
   var open = body.style.display === 'block';
   body.style.display = open ? 'none' : 'block';
   if (icon) icon.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';

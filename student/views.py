@@ -151,3 +151,9 @@ def student_profile_edit(request):
             messages.error(request, 'Could not save profile. Please try again.')
 
     return render(request, 'student/profile_edit.html', {'profile': profile})
+
+
+@login_required
+def my_submissions_redirect(request):
+    """Redirects to the actual my_submissions view in assessments app."""
+    return redirect('my_submissions')

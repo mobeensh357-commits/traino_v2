@@ -1,4 +1,4 @@
-"""Traino v2 — accounts/forms.py"""
+"""Traino v2 – accounts/forms.py"""
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
@@ -18,6 +18,13 @@ class RegisterForm(UserCreationForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('An account with this email already exists.')
         return email
+
+    def clean_username(self):
+        """
+        Override to allow duplicate usernames.
+        (Default UserCreationForm rejects duplicates.)
+        """
+        return self.cleaned_data.get('username')
 
 
 class LoginForm(forms.Form):

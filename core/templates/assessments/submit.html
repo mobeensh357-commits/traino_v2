@@ -24,10 +24,12 @@
             <div>
               <div class="tbadge tb-y mb-2">{{ assessment.get_assess_type_display }}</div>
               <h4 style="font-size:1.1rem;margin-bottom:.4rem">{{ assessment.title }}</h4>
-              <div style="font-size:.82rem;color:#6b7280">{{ assessment.course.title }}</div>
+              <div style="font-size:.82rem;color:#6b7280">
+                <i class="fas fa-graduation-cap me-1"></i>{{ assessment.course.title }}
+              </div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:1.2rem;font-weight:800;color:#F5C518">{{ assessment.total_marks }}</div>
+              <div style="font-size:1.5rem;font-weight:900;color:#F5C518;line-height:1">{{ assessment.total_marks }}</div>
               <div style="font-size:.72rem;color:#9ca3af">Total Marks</div>
             </div>
           </div>
@@ -47,27 +49,40 @@
           </div>
           {% endif %}
 
-          <!-- Question paper download (only for file mode – optional) -->
+          <!-- Question paper download (only for file mode) -->
           {% if assessment.file and assessment.mode == 'file' %}
-          <div style="margin-top:1rem;padding:.75rem 1rem;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between">
+          <div style="margin-top:1rem;padding:.75rem 1rem;background:#f9fafb;border-radius:6px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
             <div style="display:flex;align-items:center;gap:.65rem">
-              <i class="fas fa-file-pdf" style="color:#DC2626;font-size:1.1rem"></i>
+              <div style="width:38px;height:38px;border-radius:8px;background:#FEF3C7;color:#D4A017;font-size:1.1rem;display:flex;align-items:center;justify-content:center">
+                <i class="fas fa-file-pdf"></i>
+              </div>
               <div>
                 <div style="font-size:.85rem;font-weight:600">Question Paper</div>
-                <div style="font-size:.72rem;color:#9ca3af">Download and answer, then upload below</div>
+                <div style="font-size:.72rem;color:#9ca3af">Download, complete and upload your answer below</div>
               </div>
             </div>
-            <a href="{{ assessment.file.url }}" target="_blank" class="btn-outline-g btn-sm">
-              <i class="fas fa-download"></i> Download
+            <a href="{{ assessment.file.url }}" target="_blank" class="btn-y btn-sm">
+              <i class="fas fa-download"></i> Download Paper
             </a>
           </div>
           {% endif %}
         </div>
 
+        <!-- Existing submission notice -->
+        {% if existing and not existing.is_graded %}
+        <div class="t-alert info mb-4">
+          <i class="fas fa-info-circle"></i>
+          <div>
+            <strong>You have already submitted this assessment.</strong>
+            Submitting again will replace your existing submission (not yet graded).
+          </div>
+        </div>
+        {% endif %}
+
         <!-- Submission Form -->
         <div class="t-card">
           <h4 style="font-size:.95rem;margin-bottom:1.1rem;padding-bottom:.7rem;border-bottom:1px solid #e5e7eb">
-            <i class="fas fa-upload me-2" style="color:#F5C518"></i>
+            <i class="fas fa-{% if assessment.mode == 'mcq' %}list-ol{% else %}upload{% endif %} me-2" style="color:#F5C518"></i>
             {% if assessment.mode == 'mcq' %}Answer the Questions{% else %}Upload Your Answer{% endif %}
           </h4>
 
@@ -77,54 +92,59 @@
             <!-- ========== MCQ MODE ========== -->
             {% if assessment.mode == 'mcq' and questions %}
               {% for question in questions %}
-              <div class="card mb-3">
-                <div class="card-body">
-                  <h6 class="card-title">
-                    Q{{ forloop.counter }}. {{ question.question_text }}
-                    <span class="text-muted ms-2">({{ question.marks }} mark{{ question.marks|pluralize }})</span>
-                  </h6>
-                  <div class="mt-2">
-                    {% for option in question.options.all %}
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio"
-                             name="question_{{ question.pk }}"
-                             value="{{ option.pk }}"
-                             id="q{{ question.pk }}_opt{{ option.pk }}"
-                             {% if existing and option.pk|stringformat:"i" in existing.get_selected_options %}checked{% endif %}
-                             required>
-                      <label class="form-check-label" for="q{{ question.pk }}_opt{{ option.pk }}">
-                        {{ option.option_text }}
-                      </label>
-                    </div>
-                    {% endfor %}
+              <div style="margin-bottom:1.5rem;padding:1.1rem;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa" id="q-block-{{ forloop.counter }}">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;margin-bottom:.85rem">
+                  <div style="font-weight:700;font-size:.92rem;color:#111;flex:1">
+                    <span style="color:#F5C518;font-weight:900">Q{{ forloop.counter }}.</span>
+                    {{ question.question_text }}
                   </div>
+                  <span class="tbadge tb-y" style="font-size:.65rem;white-space:nowrap">
+                    {{ question.marks }} mark{{ question.marks|pluralize }}
+                  </span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:.5rem">
+                  {% for option in question.options.all %}
+                  <label style="display:flex;align-items:center;gap:.75rem;padding:.6rem .9rem;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;cursor:pointer;transition:border-color .15s;font-size:.87rem"
+                         for="q{{ question.pk }}_opt{{ option.pk }}"
+                         onmouseover="this.style.borderColor='#F5C518'"
+                         onmouseout="this.style.borderColor=this.querySelector('input').checked ? '#F5C518' : '#e5e7eb'">
+                    <input type="radio"
+                           name="question_{{ question.pk }}"
+                           value="{{ option.pk }}"
+                           id="q{{ question.pk }}_opt{{ option.pk }}"
+                           required
+                           style="accent-color:#F5C518;width:16px;height:16px;flex-shrink:0"
+                           onchange="highlightSelected(this)">
+                    {{ option.option_text }}
+                  </label>
+                  {% endfor %}
                 </div>
               </div>
               {% endfor %}
 
               <div class="t-alert info mt-3" style="font-size:.82rem">
                 <i class="fas fa-info-circle"></i>
-                <div>Your quiz will be automatically graded after submission.</div>
+                <div>Your quiz will be <strong>automatically graded</strong> immediately after submission.</div>
               </div>
 
             <!-- ========== FILE UPLOAD MODE ========== -->
             {% else %}
-            <div style="border:2px dashed #e5e7eb;border-radius:8px;padding:2rem;text-align:center;transition:border-color .2s;cursor:pointer;position:relative"
+            <div style="border:2px dashed #e5e7eb;border-radius:10px;padding:2.5rem;text-align:center;transition:border-color .2s;cursor:pointer;position:relative"
                  id="dropZone"
                  onmouseover="this.style.borderColor='#F5C518'"
-                 onmouseout="this.style.borderColor='#e5e7eb'">
+                 onmouseout="this.style.borderColor=document.getElementById('fileInput').files.length?'#16A34A':'#e5e7eb'">
 
               <i class="fas fa-cloud-upload-alt" id="uploadIcon"
-                 style="font-size:2.5rem;color:#d1d5db;display:block;margin-bottom:.75rem"></i>
+                 style="font-size:2.8rem;color:#d1d5db;display:block;margin-bottom:.75rem"></i>
               <div id="uploadText">
-                <div style="font-size:.9rem;font-weight:600;color:#374151;margin-bottom:.25rem">
+                <div style="font-size:.92rem;font-weight:700;color:#374151;margin-bottom:.3rem">
                   Click to upload or drag &amp; drop
                 </div>
                 <div style="font-size:.78rem;color:#9ca3af">
-                  PDF, DOC, DOCX, JPG, PNG — Max 50MB
+                  PDF, DOC, DOCX, JPG, PNG — Max 50 MB
                 </div>
               </div>
-              <div id="fileNameDisplay" style="display:none;font-size:.85rem;font-weight:600;color:#16A34A;margin-top:.5rem">
+              <div id="fileNameDisplay" style="display:none;font-size:.88rem;font-weight:700;color:#16A34A;margin-top:.5rem">
                 <i class="fas fa-check-circle me-1"></i>
                 <span id="selectedFileName"></span>
               </div>
@@ -133,7 +153,7 @@
                      style="position:absolute;inset:0;opacity:0;cursor:pointer"
                      onchange="showFileName(this)">
             </div>
-            <div class="t-hint mt-1">Accepted formats: PDF, DOC, DOCX, JPG, PNG</div>
+            <div class="t-hint mt-1">Accepted: PDF, DOC, DOCX, JPG, PNG</div>
             <div class="t-alert info mt-3" style="font-size:.82rem">
               <i class="fas fa-info-circle"></i>
               <div>
@@ -149,7 +169,8 @@
                 <i class="fas fa-arrow-left"></i> Back to Course
               </a>
               <button type="submit" class="btn-y" style="padding:.72rem 2rem">
-                <i class="fas fa-paper-plane"></i> Submit Assessment
+                <i class="fas fa-paper-plane"></i>
+                {% if existing %}Re-submit Assessment{% else %}Submit Assessment{% endif %}
               </button>
             </div>
           </form>
@@ -171,6 +192,17 @@ function showFileName(input) {
   document.getElementById('fileNameDisplay').style.display = 'block';
   document.getElementById('selectedFileName').textContent = name;
   document.getElementById('dropZone').style.borderColor = '#16A34A';
+}
+
+function highlightSelected(radio) {
+  // Highlight the selected option label
+  var name = radio.name;
+  document.querySelectorAll('input[name="' + name + '"]').forEach(function(r) {
+    var lbl = r.closest('label');
+    lbl.style.borderColor = r.checked ? '#F5C518' : '#e5e7eb';
+    lbl.style.background  = r.checked ? '#FFFBEA' : '#fff';
+    lbl.style.fontWeight  = r.checked ? '600'     : '400';
+  });
 }
 </script>
 {% endblock %}

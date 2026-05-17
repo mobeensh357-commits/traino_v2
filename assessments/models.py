@@ -30,7 +30,12 @@ class Assessment(models.Model):
                                    help_text='Question paper PDF (for file-upload mode).')
     total_marks = models.PositiveIntegerField(default=100, validators=[MinValueValidator(1)])
     due_date    = models.DateTimeField(null=True, blank=True)
+    is_published = models.BooleanField(
+        default=False,
+        help_text='Admin must publish this assessment before students can see or submit it.'
+    )
     created_at  = models.DateTimeField(auto_now_add=True)
+
 
     def __str__(self):
         return f'{self.title} — {self.course.title}'

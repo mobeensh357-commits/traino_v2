@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% block title %}My Submissions • Traino{% endblock %}
+{% block content %}
+
+<section class="page-banner">
+  <div class="container">
+    <h1>My Submissions</h1>
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'student_dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">My Submissions</li>
+    </ol></nav>
+  </div>
+</section>
+
+<section class="t-section">
+  <div class="container">
+
+    <!-- ── Stats Cards ── -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="t-card text-center" style="border-top:3px solid #F5C518;padding:1.25rem">
+          <div style="font-size:2rem;font-weight:900;color:#F5C518;line-height:1">{{ total }}</div>
+          <div style="font-size:.78rem;color:#6b7280;margin-top:.3rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Total Submissions</div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="t-card text-center" style="border-top:3px solid #D97706;padding:1.25rem">
+          <div style="font-size:2rem;font-weight:900;color:#D97706;line-height:1">{{ pending }}</div>
+          <div style="font-size:.78rem;color:#6b7280;margin-top:.3rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Pending Review</div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="t-card text-center" style="border-top:3px solid #16A34A;padding:1.25rem">
+          <div style="font-size:2rem;font-weight:900;color:#16A34A;line-height:1">{{ graded }}</div>
+          <div style="font-size:.78rem;color:#6b7280;margin-top:.3rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Graded</div>
+        </div>
+      </div>
+    </div>
+
+    {% if submissions %}
+    <div class="t-card p-0" style="overflow:hidden">
+      <div style="overflow-x:auto">
+        <table class="t-table">
+          <thead>
+            <tr>
+              <th>Assessment</th>
+              <th>Course</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Feedback</th>
+              <th>Submitted Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in submissions %}
+            <tr style="transition:background .15s" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+              <td>
+                <div style="font-weight:600;font-size:.85rem;color:#111">{{ sub.assessment.title }}</div>
+                <div style="font-size:.7rem;color:#9ca3af;margin-top:.2rem">
+                  <span class="tbadge tb-y" style="font-size:.62rem;padding:.1rem .45rem">{{ sub.assessment.get_assess_type_display }}</span>
+                  Max: {{ sub.assessment.total_marks }}
+                </div>
+              </td>
+              <td style="font-size:.83rem;color:#6b7280">
+                <a href="{% url 'course_detail' sub.assessment.course.pk %}" style="color:inherit;text-decoration:none">
+                  {{ sub.assessment.course.title|truncatechars:35 }}
+                </a>
+              </td>
+              <td>
+                {% if sub.is_graded %}
+                  <span class="tbadge tb-ok"><i class="fas fa-check-circle me-1"></i>Graded</span>
+                {% else %}
+                  <span class="tbadge tb-warn"><i class="fas fa-clock me-1"></i>Pending</span>
+                {% endif %}
+              </td>
+              <td style="font-weight:700;font-size:.88rem">
+                {% if sub.is_graded %}
+                  <span style="color:#16A34A">{{ sub.marks }}</span>
+                  <span style="color:#9ca3af;font-size:.75rem"> / {{ sub.assessment.total_marks }}</span>
+                  <div style="font-size:.68rem;color:#9ca3af">
+                    {{ sub.marks|floatformat:0 }}% score
+                  </div>
+                {% else %}
+                  <span style="color:#d1d5db;font-size:1.1rem">—</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.82rem;color:#6b7280;max-width:200px">
+                {% if sub.is_graded and sub.feedback %}
+                  <i class="fas fa-comment-dots me-1" style="color:#9ca3af"></i>{{ sub.feedback }}
+                {% elif sub.is_graded %}
+                  <span style="color:#d1d5db;font-style:italic">No feedback provided</span>
+                {% else %}
+                  <span style="color:#d1d5db;font-style:italic">Waiting for instructor...</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.78rem;color:#9ca3af;white-space:nowrap">
+                {{ sub.submitted_at|date:"d M Y" }}
+              </td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a href="{% url 'course_detail' sub.assessment.course.pk %}" class="btn-outline-g btn-sm" title="Go to Course">
+                    <i class="fas fa-external-link-alt"></i>
+                  </a>
+                  {% if not sub.is_graded %}
+                  <form method="POST" action="{% url 'remove_submission' sub.id %}" style="display:inline" onsubmit="return confirm('Remove your submission? You can resubmit afterwards.')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-outline-g btn-sm" style="border-color:#DC2626;color:#DC2626" title="Remove Submission">
+                      <i class="fas fa-trash-alt"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="t-empty">
+      <i class="fas fa-file-alt t-empty-icon"></i>
+      <h5>No submissions yet</h5>
+      <p>When you complete and submit assignments or quizzes, they will appear here.</p>
+      <a href="{% url 'my_courses' %}" class="btn-outline-g btn-sm mt-3">Go to My Courses</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}
